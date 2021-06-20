@@ -56,6 +56,8 @@ public final class Constants {
 
     /**
      * Global ROOT statistic node that represents the universal parent node.
+     *  固定根节点  其资源名称为：machine-root。
+     *
      */
     public final static DefaultNode ROOT = new EntranceNode(new StringResourceWrapper(ROOT_ID, EntryType.IN),
         new ClusterNode(ROOT_ID, ResourceTypeConstants.COMMON));

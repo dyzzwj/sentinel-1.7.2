@@ -47,18 +47,29 @@ import com.alibaba.csp.sentinel.context.Context;
  * @see SphU
  * @see Context
  * @see ContextUtil
+ *
+ *   保存当前的调用信息
  */
 public abstract class Entry implements AutoCloseable {
 
     private static final Object[] OBJECTS0 = new Object[0];
 
+    /**
+     * 资源调用的时间戳
+     */
     private long createTime;
+    /**
+     * 该资源所对应的实时采集信息
+     */
     private Node curNode;
     /**
      * {@link Node} of the specific origin, Usually the origin is the Service Consumer.
      */
     private Node originNode;
     private Throwable error;
+    /**
+     * 资源对象
+     */
     protected ResourceWrapper resourceWrapper;
 
     public Entry(ResourceWrapper resourceWrapper) {

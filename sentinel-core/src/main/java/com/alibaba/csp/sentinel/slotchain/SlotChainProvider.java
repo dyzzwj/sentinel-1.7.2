@@ -37,14 +37,21 @@ public final class SlotChainProvider {
      */
     public static ProcessorSlotChain newSlotChain() {
         if (slotChainBuilder != null) {
+            //如果 slotChainBuilder 不为空，则直接调用其 build 方法构建处理器链
             return slotChainBuilder.build();
         }
 
-        // Resolve the slot chain builder SPI.
-        slotChainBuilder = SpiLoader.loadFirstInstanceOrDefault(SlotChainBuilder.class, DefaultSlotChainBuilder.class);
 
+        // Resolve the slot chain builder SPI.
+        /**
+         * 如果为空，首先通过 JAVA 的 SPI 机制，尝试加载自定义的 Slot Chain 构建器实现类。
+         * 如果需要实现自定义的 Chain 构建器，只需实现 SlotChainBuilder 接口，然后将其放在 classpath 下即可，如果存在多个，以找到的第一个为准。
+         */
+        slotChainBuilder = SpiLoader.loadFirstInstanceOrDefault(SlotChainBuilder.class, DefaultSlotChainBuilder.class);
+        //未获取到自定义的slotChainBuilder，就使用默认的SlotChainBuilder
         if (slotChainBuilder == null) {
             // Should not go through here.
+            //如果从 SPI 机制中加载失败，则使用默认的构建器：DefaultSlotChainBuilde
             RecordLog.warn("[SlotChainProvider] Wrong state when resolving slot chain builder, using default");
             slotChainBuilder = new DefaultSlotChainBuilder();
         } else {

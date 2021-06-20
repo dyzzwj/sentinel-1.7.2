@@ -15,19 +15,19 @@
  */
 package com.alibaba.csp.sentinel.demo.flow;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
+import com.alibaba.csp.sentinel.util.TimeUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author jialiang.linjl
@@ -42,15 +42,18 @@ public class FlowQpsDemo {
 
     private static volatile boolean stop = false;
 
-    private static final int threadCount = 32;
-
+    private static final int threadCount = 1;
     private static int seconds = 60 + 40;
 
     public static void main(String[] args) throws Exception {
+        //初始化限流规则
         initFlowQpsRule();
 
+        //每秒 统计一次 总次数 通过次数和失败次数并打印
         tick();
         // first make the system run on a very low condition
+
+        //有N个RunTask线程在模拟访问资源
         simulateTraffic();
 
         System.out.println("===== begin to do flow control");
@@ -64,9 +67,11 @@ public class FlowQpsDemo {
         rule1.setResource(KEY);
         // set limit qps to 20
         rule1.setCount(20);
+        //设置限流类型 根据qps
         rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
         rule1.setLimitApp("default");
         rules.add(rule1);
+        //加载限流的规则
         FlowRuleManager.loadRules(rules);
     }
 

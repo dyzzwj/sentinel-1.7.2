@@ -15,10 +15,6 @@
  */
 package com.alibaba.csp.sentinel.context;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
-
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.SphO;
@@ -29,6 +25,10 @@ import com.alibaba.csp.sentinel.node.EntranceNode;
 import com.alibaba.csp.sentinel.node.Node;
 import com.alibaba.csp.sentinel.slotchain.StringResourceWrapper;
 import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Utility class to get or create {@link Context} in current thread.
@@ -46,11 +46,18 @@ public class ContextUtil {
 
     /**
      * Store the context in ThreadLocal for easy access.
+     *  使用ThreadLocal存储x线程上下文环境对象Context
+     *
      */
     private static ThreadLocal<Context> contextHolder = new ThreadLocal<>();
 
     /**
      * Holds all {@link EntranceNode}. Each {@link EntranceNode} is associated with a distinct context name.
+     *
+     * 其键为 context 的名称，用来缓存其对应的 EntranceNode 。
+     *     k - context名称
+     *     v - context对应的EntranceNode
+     *
      */
     private static volatile Map<String, DefaultNode> contextNameNodeMap = new HashMap<>();
 
@@ -110,33 +117,62 @@ public class ContextUtil {
      * @return The invocation context of the current thread
      */
     public static Context enter(String name, String origin) {
+        /**
+         *    String name：上下文环境 Context 的名称
+         *    String origin：该参数的含义在介绍集群限流时会详细介绍，从 dubbo 模块的适配来看，通常该值会传入当前应用的 application 名称
+         */
+
+        //不允许使用默认的上下文名称
         if (Constants.CONTEXT_DEFAULT_NAME.equals(name)) {
             throw new ContextNameDefineException(
                 "The " + Constants.CONTEXT_DEFAULT_NAME + " can't be permit to defined!");
         }
+
         return trueEnter(name, origin);
     }
 
     protected static Context trueEnter(String name, String origin) {
+
+        //从threadLocal中获取Context对象 线程首次获取时为空
         Context context = contextHolder.get();
         if (context == null) {
             Map<String, DefaultNode> localCacheNameMap = contextNameNodeMap;
+            /**
+             * 根据Context的名称从缓存中找对应的node 通常是EntranceNode 即用来表示入口的节点Node 为 EntranceNode
+             */
             DefaultNode node = localCacheNameMap.get(name);
             if (node == null) {
+                /**
+                 * 如果 localCacheNameMap 已缓存的对象容量默认超过2000，则不纳入 Sentinel 限流，熔断等机制中来，
+                 * 即一个应用，默认不能定义 2000个 资源统计入口，
+                 * 以 一个 Dubbo 服务为例，一个 Dubbo 服务应用，如果超过2000个服务，则超过的部分不会应用 Sentinel 限流与熔断机制。
+                 */
                 if (localCacheNameMap.size() > Constants.MAX_CONTEXT_NAME_SIZE) {
                     setNullContext();
                     return NULL_CONTEXT;
                 } else {
                     try {
                         LOCK.lock();
+                        //锁：dubble check
                         node = contextNameNodeMap.get(name);
                         if (node == null) {
+                            /**
+                             * 如果 localCacheNameMap 已缓存的对象容量默认超过2000，则不纳入 Sentinel 限流，熔断等机制中来，
+                             * 即一个应用，默认不能定义 2000个 资源统计入口，
+                             * 以 一个 Dubbo 服务为例，一个 Dubbo 服务应用，如果超过2000个服务，则超过的部分不会应用 Sentinel 限流与熔断机制。
+                             */
                             if (contextNameNodeMap.size() > Constants.MAX_CONTEXT_NAME_SIZE) {
                                 setNullContext();
                                 return NULL_CONTEXT;
                             } else {
+                                /**
+                                 * 为该context name创建一个对应的EntranceNode
+                                 */
                                 node = new EntranceNode(new StringResourceWrapper(name, EntryType.IN), null);
                                 // Add entrance node.
+                                /**
+                                 * 将创建的EntranceNode加入到根节点的子节点中
+                                 */
                                 Constants.ROOT.addChild(node);
 
                                 Map<String, DefaultNode> newMap = new HashMap<>(contextNameNodeMap.size() + 1);
@@ -150,8 +186,14 @@ public class ContextUtil {
                     }
                 }
             }
+            /**
+             * 创建 Context 对象，将 Context 对象中的入口节点设置为 新创建的 EntranceNode。
+             */
             context = new Context(node, name);
             context.setOrigin(origin);
+            /**
+             * 将新创建的 Context 对象存入当前线程本地环境变量中(ThreadLocal)。
+             */
             contextHolder.set(context);
         }
 
@@ -196,9 +238,13 @@ public class ContextUtil {
     /**
      * Exit context of current thread, that is removing {@link Context} in the
      * ThreadLocal.
+     *  移除调用上下文环境
+     *
      */
     public static void exit() {
         Context context = contextHolder.get();
+        //退出当前上下文环境，这里有一个条件就是当前的上下文环境的当前调用节点已经退出，否则无法移除，
+        // 故使用建议：ContextUtil . exit 一定要在持有的 Entry 退出之后再调用。
         if (context != null && context.getCurEntry() == null) {
             contextHolder.set(null);
         }
@@ -266,13 +312,16 @@ public class ContextUtil {
      * Execute the code within provided context.
      * This is mainly designed for context switching (e.g. in asynchronous invocation).
      *
-     * @param context the context
-     * @param f       lambda to run within the context
-     * @since 0.2.0
+     * 这里是异步调用上下文环境切换的实现原理，
+     * 我们知道存在 ThreadLocal 中的数据是无法跨线程访问的，故一个线程中启动另外一个线程，上下文环境是无法直接被传递的，
+     * Sentinel 的思想是为先创建的线程再创建一个 Context，在运行子线程时，调用 runOnContext 来切换上下文环境。
      */
     public static void runOnContext(Context context, Runnable f) {
         Context curContext = replaceContext(context);
         try {
+            /**
+             * 没有新创建线程
+             */
             f.run();
         } finally {
             replaceContext(curContext);

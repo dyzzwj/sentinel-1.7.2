@@ -15,33 +15,55 @@
  */
 package com.alibaba.csp.sentinel.slots.statistic.metric;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.alibaba.csp.sentinel.config.SentinelConfig;
 import com.alibaba.csp.sentinel.node.metric.MetricNode;
 import com.alibaba.csp.sentinel.slots.statistic.MetricEvent;
 import com.alibaba.csp.sentinel.slots.statistic.base.LeapArray;
-import com.alibaba.csp.sentinel.slots.statistic.data.MetricBucket;
 import com.alibaba.csp.sentinel.slots.statistic.base.WindowWrap;
+import com.alibaba.csp.sentinel.slots.statistic.data.MetricBucket;
 import com.alibaba.csp.sentinel.slots.statistic.metric.occupy.OccupiableBucketLeapArray;
 import com.alibaba.csp.sentinel.util.function.Predicate;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The basic metric class in Sentinel using a {@link BucketLeapArray} internal.
  *
  * @author jialiang.linjl
  * @author Eric Zhao
+ *
+ *  滑动窗口核心实现类
  */
 public class ArrayMetric implements Metric {
 
+    /**
+     * 用于存储各个窗口的数据
+     * LeapArray 的泛型类为 MetricBucket，意思就是指标桶，可以认为一个 MetricBucket 对象可以存储一个抽样时间段内所有的指标，
+     * 例如一个抽象时间段中通过数量、阻塞数量、异常数量、成功数量、响应时间，其实现的奥秘在 LongAdder 中
+     */
     private final LeapArray<MetricBucket> data;
 
     public ArrayMetric(int sampleCount, int intervalInMs) {
+        /**
+         *   int sampleCount： 在一个采集间隔中抽样的个数，默认为 2，
+         *   例如当 intervalInMs = 1000时，sampleCount = 2，则一个采集间隔中会包含两个相等的区间，一个区间就是滑动窗口。
+         *
+         *   int intervalInMs：表示一个采集的时间间隔，例如1秒，1分钟。
+         */
         this.data = new OccupiableBucketLeapArray(sampleCount, intervalInMs);
     }
 
     public ArrayMetric(int sampleCount, int intervalInMs, boolean enableOccupy) {
+        /**
+         *   int sampleCount： 在一个采集间隔中抽样的个数，默认为 2，
+         *   例如当 intervalInMs = 1000时，sampleCount = 2，则一个采集间隔中会包含两个相等的区间，一个区间就是滑动窗口。
+         *
+         *   int intervalInMs：表示一个采集的时间间隔，例如1秒，1分钟。
+         *
+         *   boolean enableOccupy：是否允许抢占 即当前时间戳已经达到限制后，是否可以占用下一个时间窗口的容量，
+         *   这里对应 LeapArray 的两个实现类，如果允许抢占，则为 OccupiableBucketLeapArray，否则为 BucketLeapArray。
+         */
         if (enableOccupy) {
             this.data = new OccupiableBucketLeapArray(sampleCount, intervalInMs);
         } else {
@@ -241,7 +263,9 @@ public class ArrayMetric implements Metric {
 
     @Override
     public void addPass(int count) {
+        //当前时间戳对应的滑动窗口
         WindowWrap<MetricBucket> wrap = data.currentWindow();
+        //增加通过数量指标
         wrap.value().addPass(count);
     }
 

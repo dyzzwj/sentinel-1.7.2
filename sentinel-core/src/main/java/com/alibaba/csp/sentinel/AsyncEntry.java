@@ -26,6 +26,8 @@ import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
  *
  * @author Eric Zhao
  * @since 0.2.0
+ *   异步调用调用信息的封装对象
+ *
  */
 public class AsyncEntry extends CtEntry {
 

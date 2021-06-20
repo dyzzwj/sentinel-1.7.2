@@ -15,15 +15,15 @@
  */
 package com.alibaba.csp.sentinel;
 
-import java.lang.reflect.Method;
-import java.util.List;
-
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.Rule;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 import com.alibaba.csp.sentinel.slots.system.SystemRule;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
+
+import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * Conceptually, physical or logical resource that need protection should be
@@ -83,6 +83,9 @@ public class SphU {
      *
      * @param name the unique name of the protected resource
      * @throws BlockException if the block criteria is met, eg. when any rule's threshold is exceeded.
+     *
+     *  申请Entry，如果申请成功 说明没有被限流 否则会抛出BlockException
+     *
      */
     public static Entry entry(String name) throws BlockException {
         return Env.sph.entry(name, EntryType.OUT, 1, OBJECTS0);

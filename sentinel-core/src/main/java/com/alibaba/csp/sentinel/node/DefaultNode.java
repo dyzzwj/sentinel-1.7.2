@@ -15,15 +15,15 @@
  */
 package com.alibaba.csp.sentinel.node;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.SphO;
 import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.context.Context;
+import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <p>
@@ -37,21 +37,29 @@ import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
  *
  * @author qinan.qn
  * @see NodeSelectorSlot
+ *
+ *  用于在特定上下文环境中保存某一个资源的实时统计信息。
  */
 public class DefaultNode extends StatisticNode {
 
     /**
      * The resource associated with the node.
+     *
+     * 资源id，即 DefaultNode 才真正与资源挂钩，可以将 DefaultNode 看出是调用链中的一个节点，并且与资源关联。
      */
     private ResourceWrapper id;
 
     /**
      * The list of all child nodes.
+     *
+     * 子节点结合。以此来维持其调用链
      */
     private volatile Set<Node> childList = new HashSet<>();
 
     /**
      * Associated cluster node.
+     *
+     * 集群节点，同样为 StatisticNode 的子类，表示与资源集群相关的环境。
      */
     private ClusterNode clusterNode;
 
@@ -82,8 +90,10 @@ public class DefaultNode extends StatisticNode {
             RecordLog.warn("Trying to add null child to node <{}>, ignored", id.getName());
             return;
         }
+        //如果子节点包含了当前节点 则跳过
         if (!childList.contains(node)) {
             synchronized (this) {
+                //不包含当前节点 则将当前节点挂在子节点里面
                 if (!childList.contains(node)) {
                     Set<Node> newSet = new HashSet<>(childList.size() + 1);
                     newSet.addAll(childList);
@@ -106,6 +116,10 @@ public class DefaultNode extends StatisticNode {
         return childList;
     }
 
+    /**
+     * DefaultNode 的此类方法，通常是先调用 StatisticNode 的方法，然后再调用 clusterNode 的相关方法，最终就是使用在对应的滑动窗口中增加或减少计量值。
+     * @param count
+     */
     @Override
     public void increaseBlockQps(int count) {
         super.increaseBlockQps(count);
@@ -142,6 +156,9 @@ public class DefaultNode extends StatisticNode {
         this.clusterNode.addPassRequest(count);
     }
 
+    /**
+     * 来打印该节点的调用链
+     */
     public void printDefaultNode() {
         visitTree(0, this);
     }

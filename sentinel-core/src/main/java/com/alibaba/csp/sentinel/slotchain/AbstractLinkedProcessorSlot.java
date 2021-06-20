@@ -25,6 +25,9 @@ public abstract class AbstractLinkedProcessorSlot<T> implements ProcessorSlot<T>
 
     private AbstractLinkedProcessorSlot<?> next = null;
 
+    /**
+     * 执行当前节点的下一个节点的entry方法 责任链模式
+     */
     @Override
     public void fireEntry(Context context, ResourceWrapper resourceWrapper, Object obj, int count, boolean prioritized, Object... args)
         throws Throwable {

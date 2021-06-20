@@ -15,17 +15,20 @@
  */
 package com.alibaba.csp.sentinel.slots.statistic.metric;
 
-import java.util.List;
-
 import com.alibaba.csp.sentinel.node.metric.MetricNode;
 import com.alibaba.csp.sentinel.slots.statistic.data.MetricBucket;
 import com.alibaba.csp.sentinel.util.function.Predicate;
+
+import java.util.List;
 
 /**
  * Represents a basic structure recording invocation metrics of protected resources.
  *
  * @author jialiang.linjl
  * @author Eric Zhao
+ *
+ *   指标收集核心接口，主要定义一个滑动窗口中成功的数量、异常数量、阻塞数量，TPS、响应时间等数据。
+ *
  */
 public interface Metric extends DebugSupport {
 

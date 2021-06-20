@@ -128,9 +128,20 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
 
     /**
      * {@link DefaultNode}s of the same resource in different context.
+     *
+     *  k - 上下文环境Context的名称 通常是进入节点的名称
+     *
+     *   一个 NodeSelectorSlot 对象会被多个线程使用，其共享的维度为资源，
+     *   即多个线程进入同一个资源保护的代码时，执行的是同一个 NodeSelectorSlot 对象
+     *
      */
     private volatile Map<String, DefaultNode> map = new HashMap<String, DefaultNode>(10);
 
+
+    /**
+     *负责收集资源的路径，并将这些资源的调用路径，以树状结构存储起来，用于根据调用路径来限流降级；
+     * 根本作用 ：设置 Context 的 curEntry 属性
+     */
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, Object obj, int count, boolean prioritized, Object... args)
         throws Throwable {
@@ -152,24 +163,58 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
          * The answer is all {@link DefaultNode}s with same resource name share one
          * {@link ClusterNode}. See {@link ClusterBuilderSlot} for detail.
          */
+
+        /**
+         *
+         *  Context context, 调用上下文环境，该对象存储在 ThreadLocal，其名称在调用链的入口处设置。
+         *  ResourceWrapper resourceWrapper,资源的包装类，注意留意其 equals 与 hashCode 方法，判断两个对象是否相等的依据是资源名称是否相同。
+         *  Object obj, 参数
+         *  int count,本次需要消耗的令牌数量
+         *  boolean prioritized,请求是否按优先级排列
+         *  Object... args，额外参数
+         *
+         */
+
+        /**
+         * 如果缓存中存在对应 该上下文环境的节点，则直接使用，并将其节点设置当前调用上下文的当前节点中(Context)。
+         * 对于同一个资源 多次调用entry = SphU.entry("HelloWorld"); 只有第一次会创建该上下文环境对应的DefaultNode，后面再次调用会命中map
+         * 每个资源都对应一个SlotChain，即对应一个NodeSelectorSlot，即对应一个map
+         *  多个资源可以对应同一个Context
+         *
+         */
         DefaultNode node = map.get(context.getName());
+        //双重检测 线程安全
         if (node == null) {
             synchronized (this) {
                 node = map.get(context.getName());
                 if (node == null) {
+                    //创建resource对应的node，类型为DefaultNode
                     node = new DefaultNode(resourceWrapper, null);
+                    //保存Node 一个resource对应一个Node
+
+                    //下面这些逻辑是放入map的逻辑，因为后期map比较大，所以这样放入，性能会高一些
                     HashMap<String, DefaultNode> cacheMap = new HashMap<String, DefaultNode>(map.size());
                     cacheMap.putAll(map);
+                    // k - resource
                     cacheMap.put(context.getName(), node);
                     map = cacheMap;
                     // Build invocation tree
+                    //添加到context的node节点 这里构造了一棵树
+                    /**
+                     * 构建调用链，由于 NodeSelectorSlot 是第一个进入的处理器，故此时 Context 的 curEntry 为 null ，
+                     * 故这里就是创建与上下文环境名称对应的节点会被添加到 ContextUtil 的 entry 创建的调用链入口节点(EntranceNode)，
+                     *
+                     * 然后顺便更新 Context 中的 Entry curEntry 属性
+                     */
                     ((DefaultNode) context.getLastNode()).addChild(node);
                 }
 
             }
         }
 
+        //设置当前context的当前节点为node
         context.setCurNode(node);
+        //调用下一个slot
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }
 

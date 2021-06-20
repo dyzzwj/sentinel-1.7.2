@@ -15,13 +15,13 @@
  */
 package com.alibaba.csp.sentinel.node;
 
-import java.util.List;
-import java.util.Map;
-
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.node.metric.MetricNode;
 import com.alibaba.csp.sentinel.slots.statistic.metric.DebugSupport;
 import com.alibaba.csp.sentinel.util.function.Predicate;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Holds real-time statistics for resources.
@@ -29,6 +29,9 @@ import com.alibaba.csp.sentinel.util.function.Predicate;
  * @author qinan.qn
  * @author leyou
  * @author Eric Zhao
+ *
+ *  持有实时统计信息的节点  定义了收集统计信息与获取统计信息的接口
+ *
  */
 public interface Node extends OccupySupport, DebugSupport {
 

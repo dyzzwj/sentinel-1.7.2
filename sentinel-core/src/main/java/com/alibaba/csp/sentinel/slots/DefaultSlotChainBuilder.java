@@ -35,9 +35,22 @@ public class DefaultSlotChainBuilder implements SlotChainBuilder {
 
     @Override
     public ProcessorSlotChain build() {
+
+        //有头尾节点的链表
         ProcessorSlotChain chain = new DefaultProcessorSlotChain();
 
-        // Note: the instances of ProcessorSlot should be different, since they are not stateless.
+        /**
+         *  通过java spi规范生成chain   路径 ：  sentinel-core模块  resources/META-INF/services/com.alibaba.csp.sentinel.slotchain.ProcessorSlot
+         *   责任链的设计模式
+         *     chain.addLast(new NodeSelectorSlot());   链表第一个元素
+         *     chain.addLast(new ClusterBuilderSlot());
+         *     chain.addLast(new LogSlot());
+         *     chain.addLast(new StatisticSlot());
+         *     chain.addLast(new SystemSlot());
+         *     chain.addLast(new AuthoritySlot());
+         *     chain.addLast(new FlowSlot());
+         *     chain.addLast(new DegradeSlot());        链表最后一个元素
+         */
         List<ProcessorSlot> sortedSlotList = SpiLoader.loadPrototypeInstanceListSorted(ProcessorSlot.class);
         for (ProcessorSlot slot : sortedSlotList) {
             if (!(slot instanceof AbstractLinkedProcessorSlot)) {

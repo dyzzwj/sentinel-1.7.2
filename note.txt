@@ -1,0 +1,18 @@
+
+sentinel-adapter : 对各种框架，中间件的支持。包括dubbo，网关gateway，grpc，reactor，spring-cloud-gateway、webflux，webmvc，servlet和zuul
+
+sentinel-benchmark ： 测试类相关
+
+sentinel-cluster:  集群实现
+
+
+sentinel-core : 核心功能 限流、降级、系统保护等都在这里实现
+
+sentinel-dashboard ： 控制台模块，可以对连接上的sentinel客户端实现可视化的管理
+
+sentinel-demo ： 支持各种中间件的例子
+
+sentinel-extension ：扩展实现，支持各个中间件。主要对DataSource进行了部分扩展实现
+
+sentinel-transport:  传输模块，提供了基本的监控服务端和客户端的API接口，以及一些基于不同库的实现 目前支持netty和http
+

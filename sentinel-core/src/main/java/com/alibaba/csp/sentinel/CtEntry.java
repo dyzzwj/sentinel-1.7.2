@@ -27,6 +27,8 @@ import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
  *
  * @author jialiang.linjl
  * @author Eric Zhao
+ *
+ *   同步调用调用信息封装对象
  */
 class CtEntry extends Entry {
 
@@ -49,6 +51,8 @@ class CtEntry extends Entry {
         if (context instanceof NullContext) {
             return;
         }
+
+        //第一调用Entry生成的时候(第一次调用SphU.entry()) context.getCurEntry必定是null
         this.parent = context.getCurEntry();
         if (parent != null) {
             ((CtEntry)parent).child = this;

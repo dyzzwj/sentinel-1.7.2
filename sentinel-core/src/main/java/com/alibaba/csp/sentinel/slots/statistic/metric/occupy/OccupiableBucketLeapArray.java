@@ -15,39 +15,61 @@
  */
 package com.alibaba.csp.sentinel.slots.statistic.metric.occupy;
 
-import java.util.List;
-
 import com.alibaba.csp.sentinel.slots.statistic.MetricEvent;
 import com.alibaba.csp.sentinel.slots.statistic.base.LeapArray;
 import com.alibaba.csp.sentinel.slots.statistic.base.WindowWrap;
 import com.alibaba.csp.sentinel.slots.statistic.data.MetricBucket;
 
+import java.util.List;
+
 /**
  * @author jialiang.linjl
  * @since 1.5.0
+ *
+ *  抢占未来的令牌
+ *
+ *   实现的思想是当前抽样统计中的“令牌”已耗尽，即达到用户设定的相关指标的阔值后，可以向下一个时间窗口，即借用未来一个采样区间
  */
+
+
 public class OccupiableBucketLeapArray extends LeapArray<MetricBucket> {
 
     private final FutureBucketLeapArray borrowArray;
 
     public OccupiableBucketLeapArray(int sampleCount, int intervalInMs) {
         // This class is the original "CombinedBucketArray".
+        //创建一个常规的LeapArray
         super(sampleCount, intervalInMs);
         this.borrowArray = new FutureBucketLeapArray(sampleCount, intervalInMs);
     }
 
+    /**
+     * 在获取当前窗口时，对应的数组下标为空的时会创建
+     * @param time
+     * @return
+     */
     @Override
     public MetricBucket newEmptyBucket(long time) {
         MetricBucket newBucket = new MetricBucket();
 
         MetricBucket borrowBucket = borrowArray.getWindowValue(time);
         if (borrowBucket != null) {
+            /**
+             * 在新建的时候，如果曾经有借用过未来的滑动窗口，则将未来的滑动窗口上收集的数据 copy 到新创建的采集指标上，再返回。
+             */
             newBucket.reset(borrowBucket);
         }
 
         return newBucket;
     }
 
+    /**
+     * 遇到过期的滑动窗口时，需要对滑动窗口进行重置，这里的思路和 newEmptyBucket 的核心思想是一样的，
+     * 即如果存在已借用的情况，在重置后需要加上在未来已使用过的许可
+     * @param w
+     * @param time
+     * @return
+     */
     @Override
     protected WindowWrap<MetricBucket> resetWindowTo(WindowWrap<MetricBucket> w, long time) {
         // Update the start time and reset value.
@@ -75,6 +97,11 @@ public class OccupiableBucketLeapArray extends LeapArray<MetricBucket> {
         return currentWaiting;
     }
 
+    /**
+     * 该方法应该是当前滑动窗口中的“令牌”已使用完成，借用未来的令牌
+     * @param time
+     * @param acquireCount
+     */
     @Override
     public void addWaiting(long time, int acquireCount) {
         WindowWrap<MetricBucket> window = borrowArray.currentWindow(time);

@@ -53,29 +53,42 @@ import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
  * @author Eric Zhao
  * @see ContextUtil
  * @see NodeSelectorSlot
+ *
+ *   一个线程对应一个context
+ *
  */
 public class Context {
 
     /**
      * Context name.
+     *  Sentinel 调用上下文环境的名称
+     *
      */
     private final String name;
 
     /**
      * The entrance node of current invocation tree.
+     *  EntranceNode
+     *   调用链入口的节点信息
      */
     private DefaultNode entranceNode;
 
     /**
      * Current processing entry.
+     *  调用链中当前节点的上下文信息
+     *
      */
     private Entry curEntry;
 
     /**
      * The origin of this context (usually indicate different invokers, e.g. service consumer name or origin IP).
+     * 调用者来源
      */
     private String origin = "";
 
+    /**
+     * 是否是异步调用上下文环境
+     */
     private final boolean async;
 
     /**
@@ -177,9 +190,11 @@ public class Context {
      * @return the parent node of the current.
      */
     public Node getLastNode() {
+        //从当前节点获取 如果当前节点不为空 则当前节点就为最后一个节点
         if (curEntry != null && curEntry.getLastNode() != null) {
             return curEntry.getLastNode();
         } else {
+            //直接返回entranceNode
             return entranceNode;
         }
     }

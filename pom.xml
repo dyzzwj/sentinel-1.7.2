@@ -79,6 +79,7 @@
 
         <module>sentinel-demo</module>
         <module>sentinel-benchmark</module>
+        <module>zwj-sentinel</module>
 
     </modules>
 

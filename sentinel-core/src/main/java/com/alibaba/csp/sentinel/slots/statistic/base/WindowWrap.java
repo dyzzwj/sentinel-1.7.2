@@ -17,20 +17,19 @@ package com.alibaba.csp.sentinel.slots.statistic.base;
 
 /**
  * Wrapper entity class for a period of time window.
+
  *
- * @param <T> data type
- * @author jialiang.linjl
- * @author Eric Zhao
+ *  每一个滑动窗口的包装类，其内部的数据结构用 MetricBucket 表示。
  */
 public class WindowWrap<T> {
 
     /**
-     * Time length of a single window bucket in milliseconds.
+     * 每一个窗口的时间间隔
      */
     private final long windowLengthInMs;
 
     /**
-     * Start timestamp of the window in milliseconds.
+     * 当前滑动窗口的开始时间
      */
     private long windowStart;
 
