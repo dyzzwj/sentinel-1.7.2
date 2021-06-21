@@ -25,6 +25,8 @@ public abstract class AbstractRule implements Rule {
 
     /**
      * Resource name.
+     *  资源的名称
+     *
      */
     private String resource;
 
@@ -36,6 +38,9 @@ public abstract class AbstractRule implements Rule {
      * <p>
      * For authority rules, multiple origin name can be separated with comma (',').
      * </p>
+     *
+     *   需要限制的调用来源，对应【新增流控规则界面】的针对来源。
+     *
      */
     private String limitApp;
 

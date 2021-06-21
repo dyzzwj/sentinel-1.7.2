@@ -136,10 +136,19 @@ import java.util.Map;
  *
  * @author jialiang.linjl
  * @author Eric Zhao
+ *
+ *
+ * 触发限流
+ * 收集实时调用信息。
+ * 设置触发限流规则
+ * 根据限流规则与调用信息来决定是否对请求进行限流等。
+ *
+ *
  */
 @SpiOrder(-2000)
 public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
+    //判断是否满足流控触发条件
     private final FlowRuleChecker checker;
 
     public FlowSlot() {
@@ -160,8 +169,23 @@ public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
+
+        /**
+         * Context context：当前 Sentinel 调用的上下文。
+         * ResourceWrapper resourceWrapper：当前访问的资源。
+         * DefaultNode node：当前上下文环境对应的节点。
+         * int count：本次调用需要消耗的“令牌”个数
+         * boolean prioritized：是否是高优先级。
+         * Object… args：额外参数。
+         */
+
+
+        /**
+         * ：调用 checkFlow ，根据配置的限流规则，结合实时统计信息，判断是否满足流控条件，如果满足，则触发流控
+         */
         checkFlow(resourceWrapper, context, node, count, prioritized);
 
+        // 继续沿着 slot 链进行传播。
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }
 

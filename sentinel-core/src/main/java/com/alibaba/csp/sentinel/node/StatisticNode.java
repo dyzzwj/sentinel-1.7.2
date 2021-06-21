@@ -313,13 +313,24 @@ public class StatisticNode implements Node {
 
     @Override
     public long tryOccupyNext(long currentTime, int acquireCount, double threshold) {
+        /**
+         *  currentTime：当前时间
+         *  acquireCount：需要的令牌数
+         *  threshold：总令牌数
+         */
+        //下一个统计的时间间隔内总的令牌数
         double maxCount = threshold * IntervalProperty.INTERVAL / 1000;
+        //获取下一个周期内 所有滑动窗口已经被占用的令牌数
         long currentBorrow = rollingCounterInSecond.waiting();
+
+        //下一个统计的事件间隔内滑动窗口的已全被占用
         if (currentBorrow >= maxCount) {
             return OccupyTimeoutProperty.getOccupyTimeout();
         }
-
+        //没一个窗口的时间间隔
         int windowLength = IntervalProperty.INTERVAL / SampleCountProperty.SAMPLE_COUNT;
+        //  currentTime - currentTime % windowLength ：滑动窗口的起始位置
+        //下一个滑动窗口的结束位置
         long earliestTime = currentTime - currentTime % windowLength + windowLength - IntervalProperty.INTERVAL;
 
         int idx = 0;
@@ -328,6 +339,8 @@ public class StatisticNode implements Node {
          * since call rollingCounterInSecond.pass(). So in high concurrency, the following code may
          * lead more tokens be borrowed.
          */
+
+        //当前统计的时间间隔内 已发放的令牌
         long currentPass = rollingCounterInSecond.pass();
         while (earliestTime < currentTime) {
             long waitInMs = idx * windowLength + windowLength - currentTime % windowLength;

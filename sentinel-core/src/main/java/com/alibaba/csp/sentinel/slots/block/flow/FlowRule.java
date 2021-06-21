@@ -50,11 +50,16 @@ public class FlowRule extends AbstractRule {
 
     /**
      * The threshold type of flow control (0: thread count, 1: QPS).
+     *
+     *  流量控制的阈值类型，目前支持 QPS 与 并发线程数，对应 【新增流控规则界面】的阔值类型。
+     *  默认是qps
      */
     private int grade = RuleConstant.FLOW_GRADE_QPS;
 
     /**
      * Flow control threshold count.
+     *
+     *
      */
     private double count;
 
@@ -64,30 +69,53 @@ public class FlowRule extends AbstractRule {
      * {@link RuleConstant#STRATEGY_DIRECT} for direct flow control (by origin);
      * {@link RuleConstant#STRATEGY_RELATE} for relevant flow control (with relevant resource);
      * {@link RuleConstant#STRATEGY_CHAIN} for chain flow control (by entrance resource).
+     *  基于调用链的流量控制策略  对应【新增流控规则界面】的流控模式
+     *
+     *   可选值：STRATEGY_DIRECT(根据调用方限流策略)、STRATEGY_RELATE(关联流量限
+     * 流策略)、STRATEGY_CHAIN(根据调用链入口限流策略)
+     *
      */
     private int strategy = RuleConstant.STRATEGY_DIRECT;
 
     /**
      * Reference resource in flow control with relevant resource or context.
+     *
+     *  关联资源或入口资源，当流控模式为关联或链路时配置的关联资源或入口资源，对应【新增流控规则界面】的【入口资源】
      */
     private String refResource;
 
     /**
      * Rate limiter control behavior.
      * 0. default(reject directly), 1. warm up, 2. rate limiter, 3. warm up + rate limiter
+     *
+     *  流量控制后的采取的行为，其可选取值在本文开头部分有详细介绍，对应【新增流控规则界面】的流控效果。
+     *
+     *   CONTROL_BEHAVIOR_DEFAULT(直接拒绝)、CONTROL_BEHAVIOR_WARM_UP(预热)、CONTROL_BEHAVIOR_RATE_LIMITER(匀速排队)、
+     * CONTROL_BEHAVIOR_WARM_UP_RATE_LIMITER(预热与匀速排队)。
      */
     private int controlBehavior = RuleConstant.CONTROL_BEHAVIOR_DEFAULT;
 
+    /**
+     * 预热时间，如果 controlBehavior 设置为预热(warm up)时，可以配置其预热时间，
+     * 在【新增流控规则界面】中选择 warm up 类型后，会增加一行，供用户配置，默认值 10s。
+     */
     private int warmUpPeriodSec = 10;
 
     /**
      * Max queueing time in rate limiter behavior.
+     *
+     *  最大超时时间，如果 controlBehavior 设置为排队等待时，等待的最大超时时间，默认为500ms。
      */
     private int maxQueueingTimeMs = 500;
 
+    /**
+     * 是否是集群限流模式，对应【新增流控规则界面】的是否集群。
+     */
     private boolean clusterMode;
     /**
      * Flow rule config for cluster mode.
+     *
+     *  集群扩容相关配置，集群限流将在后续文章中重点介绍。
      */
     private ClusterFlowConfig clusterConfig;
 
