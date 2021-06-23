@@ -139,7 +139,7 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
 
 
     /**
-     *负责收集资源的路径，并将这些资源的调用路径，以树状结构存储起来，用于根据调用路径来限流降级；
+     * 负责收集资源的路径，并将这些资源的调用路径，以树状结构存储起来，用于根据调用路径来限流降级；
      * 根本作用 ：设置 Context 的 curEntry 属性
      */
     @Override
@@ -178,7 +178,7 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
         /**
          * 如果缓存中存在对应 该上下文环境的节点，则直接使用，并将其节点设置当前调用上下文的当前节点中(Context)。
          * 对于同一个资源 多次调用entry = SphU.entry("HelloWorld"); 只有第一次会创建该上下文环境对应的DefaultNode，后面再次调用会命中map
-         * 每个资源都对应一个SlotChain，即对应一个NodeSelectorSlot，即对应一个map
+         * 每个资源都对应一个SlotChain，即对应一个NodeSelectorSlot，即对应一个map，即对应一个DefaultNode
          *  多个资源可以对应同一个Context
          *
          */

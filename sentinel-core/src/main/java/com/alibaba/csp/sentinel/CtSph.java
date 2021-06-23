@@ -140,6 +140,7 @@ public class CtSph implements Sph {
         //上下文为空 就使用默认context
         if (context == null) {
             // Using default context.
+            //使用默认context
             context = InternalContextUtil.internalEnter(Constants.CONTEXT_DEFAULT_NAME);
         }
 
