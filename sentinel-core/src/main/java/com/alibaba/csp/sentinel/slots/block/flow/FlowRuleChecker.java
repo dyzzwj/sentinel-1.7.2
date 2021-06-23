@@ -48,7 +48,7 @@ public class FlowRuleChecker {
         }
 
         /**
-         * 通过现楼规则提供器获取与该资源相关的l流控规则列表
+         * 通过限流规则提供器获取与该资源相关的流控规则列表
          */
         Collection<FlowRule> rules = ruleProvider.apply(resource.getName());
         if (rules != null) {
@@ -136,14 +136,15 @@ public class FlowRuleChecker {
     static Node selectNodeByRequesterAndStrategy(/*@NonNull*/ FlowRule rule, Context context, DefaultNode node) {
 
         // The limit app should not be empty.
+
+        String limitApp = rule.getLimitApp();
+        int strategy = rule.getStrategy();
+        String origin = context.getOrigin();
         /**
          * String limitApp：该条限流规则针对的调用方。
          * int strategy：该条限流规则的流控策略。
          * String origin：本次请求的调用方，从当前上下文环境中获取，例如 dubbo 服务提供者，原始调用方为 dubbo 服务提供者的 application。
          */
-        String limitApp = rule.getLimitApp();
-        int strategy = rule.getStrategy();
-        String origin = context.getOrigin();
         //如果限流规则配置的针对的调用方与当前请求实际调用来源匹配（并且不是 default、other)时的处理逻辑
         if (limitApp.equals(origin) && filterOrigin(origin)) {
             //如果流控模式为 RuleConstant.STRATEGY_DIRECT(直接)，则从 context 中获取源调用方所代表的 Node
@@ -166,7 +167,7 @@ public class FlowRuleChecker {
         } else if (RuleConstant.LIMIT_APP_OTHER.equals(limitApp)
             && FlowRuleManager.isOtherOrigin(origin, rule.getResource())) {
             /**
-             *   流控规则针对调用方如果设置为 other，表示针对没有配置流控规则的资源。
+             *   流控规则针对调用方如果设置为 other，表示针对    没有配置流控规则的资源。 流控规则是针对非FlowRule里limitApp的其他所有调用方
              *
              * 如果流控规则针对的调用方为(other)，此时需要判断是否有针对当前的流控规则，
              * 只要存在，则这条规则对当前资源“失效”，如果针对该资源没有配置其他额外的流控规则，则获取实时统计节点(Node)的处理逻辑为：

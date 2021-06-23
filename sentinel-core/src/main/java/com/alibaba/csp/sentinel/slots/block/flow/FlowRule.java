@@ -45,6 +45,7 @@ public class FlowRule extends AbstractRule {
     public FlowRule(String resourceName) {
         super();
         setResource(resourceName);
+
         setLimitApp(RuleConstant.LIMIT_APP_DEFAULT);
     }
 

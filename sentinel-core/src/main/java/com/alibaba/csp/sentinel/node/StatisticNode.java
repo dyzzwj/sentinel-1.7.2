@@ -327,7 +327,7 @@ public class StatisticNode implements Node {
         if (currentBorrow >= maxCount) {
             return OccupyTimeoutProperty.getOccupyTimeout();
         }
-        //没一个窗口的时间间隔
+        //每个窗口的时间间隔
         int windowLength = IntervalProperty.INTERVAL / SampleCountProperty.SAMPLE_COUNT;
         //  currentTime - currentTime % windowLength ：滑动窗口的起始位置
         //下一个滑动窗口的结束位置
@@ -340,15 +340,21 @@ public class StatisticNode implements Node {
          * lead more tokens be borrowed.
          */
 
-        //当前统计的时间间隔内 已发放的令牌
+        //当前时间间隔内 已发放的令牌
         long currentPass = rollingCounterInSecond.pass();
+        //如果下一个滑动窗口的结束时间 < 当前时间
         while (earliestTime < currentTime) {
+            //当前时间到下一个滑动窗口的间隔
             long waitInMs = idx * windowLength + windowLength - currentTime % windowLength;
+            //OccupyTimeoutProperty.getOccupyTimeout : 500
             if (waitInMs >= OccupyTimeoutProperty.getOccupyTimeout()) {
                 break;
             }
+            // 下一个滑动窗口 已发放的令牌
             long windowPass = rollingCounterInSecond.getWindowPass(earliestTime);
+            //如果当前时间间隔内已发放的令牌 + 下一个周期内 所有滑动窗口已经被占用的令牌数 + 需要的令牌数 - 下一个滑动窗口 已发放的令牌 < 下一个统计的时间间隔内总的令牌数
             if (currentPass + currentBorrow + acquireCount - windowPass <= maxCount) {
+                //返回当前时间到下一个滑动窗口的间隔
                 return waitInMs;
             }
             earliestTime += windowLength;
