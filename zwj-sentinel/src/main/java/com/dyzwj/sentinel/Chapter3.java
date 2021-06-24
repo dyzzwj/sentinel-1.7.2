@@ -2,6 +2,8 @@ package com.dyzwj.sentinel;
 
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.context.Context;
+import com.alibaba.csp.sentinel.context.ContextUtil;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
@@ -14,31 +16,26 @@ public class Chapter3 {
 
     public static void main(String[] args) {
         //配置规则
-        initFlowRules();
-        for (int i = 0; i < 100; i++){
-            Entry entry = null;
-            Entry entry1 = null;
-            try {
-                entry = SphU.entry("HelloWorld");
+        try {
+            Context context= ContextUtil.enter("context1");
+            Entry entry= SphU.entry("A");
+            Entry entry2=SphU.entry("B");
 
-                if(i % 2 == 0){
-                    entry1 = SphU.entry("hahah");
-                }
-                /*您的业务逻辑 - 开始*/
-                System.out.println("hello world");
-                /*您的业务逻辑 - 结束*/
-            } catch (BlockException e1) {
-                /*流控逻辑处理 - 开始*/
-                System.out.println("block!");
-                /*流控逻辑处理 - 结束*/
-            } finally {
-                if (entry != null) {
-                    entry.exit();
-                }
-                if(i % 2 == 0){
-                    entry1.exit();
-                }
-            }
+            entry.exit();
+            entry2.exit();
+            Entry entry3=SphU.entry("A");
+            Entry entry4=SphU.entry("B");
+            entry3.exit();
+            entry4.exit();
+
+
+
+            ContextUtil.exit();
+        } catch (BlockException ex) {
+            // 处理被流控的逻辑
+            System.out.println("blocked!");
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 
