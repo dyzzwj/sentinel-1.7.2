@@ -15,11 +15,18 @@
  */
 package com.alibaba.csp.sentinel.demo.spring.webmvc.controller;
 
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.EntryType;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.Tracer;
+import com.alibaba.csp.sentinel.context.ContextUtil;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Test controller
@@ -32,6 +39,29 @@ public class WebMvcTestController {
     public String apiHello() {
         doBusiness();
         return "Hello!";
+    }
+
+    @GetMapping("/world")
+    public String apiWorld() {
+        ContextUtil.enter("my_context");
+        Entry entry = null;
+        try {
+            entry = SphU.entry("POST:http://wujiuye.com/hello2", EntryType.OUT);
+            // ==== 这里是被包装的代码 =====
+            doBusiness();
+            return "Hello!";
+            // ==== end ===============
+        } catch (Exception e) {
+            if (!(e instanceof BlockException)) {
+                Tracer.trace(e);
+            }
+        } finally {
+            if (entry != null) {
+                entry.exit(1);
+            }
+            ContextUtil.exit();
+        }
+        return "world";
     }
 
     @GetMapping("/err")

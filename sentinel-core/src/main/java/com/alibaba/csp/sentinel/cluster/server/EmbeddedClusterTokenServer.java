@@ -18,10 +18,8 @@ package com.alibaba.csp.sentinel.cluster.server;
 import com.alibaba.csp.sentinel.cluster.TokenService;
 
 /**
- * Embedded token server interface that can work in embedded mode.
- *
- * @author Eric Zhao
- * @since 1.4.0
+ EmbeddedClusterTokenServer 接口继承 ClusterTokenServer，并继承 TokenService 接口，
+ 即整合客户端和服务端的功能，为嵌入式模式提供支持。在嵌入式模式下，如果当前节点是集群限流服务端，那就没有必要发起网络请求。
  */
 public interface EmbeddedClusterTokenServer extends ClusterTokenServer, TokenService {
 }

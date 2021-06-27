@@ -18,11 +18,10 @@ package com.alibaba.csp.sentinel.cluster.client;
 import com.alibaba.csp.sentinel.cluster.TokenServerDescriptor;
 import com.alibaba.csp.sentinel.cluster.TokenService;
 
+
 /**
- * Token client interface for distributed flow control.
- *
- * @author Eric Zhao
- * @since 1.4.0
+ * 定义启动和停止集群限流客户端的方法，负责维护客户端与服务端的连接。该接口还继承了 TokenService，
+ * 要求实现类必须要实现 requestToken、requestParamToken 方法，向远程服务端请求获取令牌。
  */
 public interface ClusterTokenClient extends TokenService {
 

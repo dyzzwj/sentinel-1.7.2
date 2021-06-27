@@ -61,6 +61,12 @@ final class ClusterFlowChecker {
         return GlobalRequestLimiter.tryPass(namespace);
     }
 
+    /**
+     * 由于网络延迟的存在，Sentinel 集群限流并未实现匀速排队流量效果控制，也没有支持冷启动，而只支持直接拒绝请求的流控效果。
+     * 响应状态码 SHOULD_WAIT 并非用于实现匀速限流，而是用于实现具有优先级的请求在达到限流阈值的情况下，
+     * 可试着占据下一个时间窗口的 pass 指标，如果抢占成功，则告诉限流客户端，当前请求需要休眠等待下个时间窗口的到来才可以通过
+     * Sentinel 使用提前申请在未来时间通过的方式实现优先级语意。
+     */
     static TokenResult acquireClusterToken(/*@Valid*/ FlowRule rule, int acquireCount, boolean prioritized) {
         Long id = rule.getClusterConfig().getFlowId();
 
@@ -83,7 +89,7 @@ final class ClusterFlowChecker {
         if (metric == null) {
             return new TokenResult(TokenResultStatus.FAIL);
         }
-        //获取当前正常访问的qps
+        //获取每秒平均被放行请求数
         double latestQps = metric.getAvg(ClusterFlowEvent.PASS);
         /**
          * 根据限流配置规则得出其总许可数量，其主要根据阔值的方式其有所不同，其配置阔值有两种方式：
@@ -112,7 +118,7 @@ final class ClusterFlowChecker {
                 .setWaitInMs(0);
         } else {//没有剩余许可数
             //如果该请求为高优先级的
-            if (prioritized) {
+            if (prioritized) {//使用提前申请在未来时间通过的方式实现优先级语意
                 // Try to occupy incoming buckets.
                 //获取当前等待的tps （即1s为维度，当前等待的请求数量）
                 double occupyAvg = metric.getAvg(ClusterFlowEvent.WAITING);

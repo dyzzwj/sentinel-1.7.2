@@ -18,6 +18,16 @@ package com.alibaba.csp.sentinel.cluster.flow.statistic.data;
 /**
  * @author Eric Zhao
  * @since 1.4.0
+ *
+ *  实现集群限流需要收集的指标数据有以下几种：
+     * PASS：已经发放的令牌总数
+     * BLOCK：令牌申请被驳回的总数
+     * PASS_REQUEST：被放行的请求总数
+     * BLOCK_REQUEST：被拒绝的请求总数
+     * OCCUPIED_PASS：预占用，已经发放的令牌总数
+     * OCCUPIED_BLOCK：预占用，令牌申请被驳回的总数
+     * WAITING：当前等待下一个时间窗口到来的请求总数
+ *
  */
 public enum ClusterFlowEvent {
 

@@ -176,10 +176,18 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
          */
 
         /**
+         * 如果资源第一次被访问，也就是资源的 ProcessorSlotChain 第一次被创建，那么这个 map 是空的，就会加锁为资源创建 DefaultNode，
+         * 如果资源不是首次被访问，但却首次作为当前调用链路（Context）的入口资源，也需要加锁为资源创建一个 DefaultNode。
+         * 可见，Sentinel 会为同一资源 ID 创建多少个 DefaultNode 取决于有多少个调用链使用其作为入口资源，
+         * 直白点就是同一资源存在多少个 DefaultNode 取决于 Context.name 有多少种不同取值，这就是为什么说一个资源可能有多个 DefaultNode 的原因。
+         */
+
+        /**
          * 如果缓存中存在对应 该上下文环境的节点，则直接使用，并将其节点设置当前调用上下文的当前节点中(Context)。
          * 对于同一个资源 多次调用entry = SphU.entry("HelloWorld"); 只有第一次会创建该上下文环境对应的DefaultNode，后面再次调用会命中map
-         * 一个资源都对应一个SlotChain，即对应一个NodeSelectorSlot，即对应一个map，即对应一个DefaultNode
+         * 一个资源都对应一个SlotChain，即对应一个NodeSelectorSlot，即对应一个map
          *  多个资源可以对应同一个Context
+         *   map 的作用是缓存针对同一资源为不同调用链路入口创建的 DefaultNode。
          *
          */
         DefaultNode node = map.get(context.getName());

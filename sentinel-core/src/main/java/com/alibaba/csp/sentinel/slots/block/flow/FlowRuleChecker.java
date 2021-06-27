@@ -77,6 +77,13 @@ public class FlowRuleChecker {
             return true;
         }
         //集群限流模式
+        /**
+         * 由于网络延迟的存在，Sentinel 集群限流并未实现匀速排队流量效果控制，也没有支持冷启动，
+         * 而只支持直接拒绝请求的流控效果。响应状态码 SHOULD_WAIT 并非用于实现匀速限流，
+         * 而是用于实现具有优先级的请求在达到限流阈值的情况下，可试着占据下一个时间窗口的 pass 指标，
+         * 如果抢占成功，则告诉限流客户端，当前请求需要休眠等待下个时间窗口的到来才可以通过。
+         * Sentinel 使用提前申请在未来时间通过的方式实现优先级语意。
+         */
         if (rule.isClusterMode()) {
             return passClusterCheck(rule, context, node, acquireCount, prioritized);
         }
@@ -195,7 +202,7 @@ public class FlowRuleChecker {
             long flowId = rule.getClusterConfig().getFlowId();
             //通过 TokenService 去申请 token，这里是与单机限流模式最大的差别
             TokenResult result = clusterService.requestToken(flowId, acquireCount, prioritized);
-            //应用申请token结果
+            //解析申请token结果
             return applyTokenResult(result, rule, context, node, acquireCount, prioritized);
             // If client is absent, then fallback to local mode.
         } catch (Throwable ex) {
@@ -239,12 +246,12 @@ public class FlowRuleChecker {
                                                          int acquireCount, boolean prioritized) {
         switch (result.getStatus()) {
             case TokenResultStatus.OK:
-                //申请许可成功
+                //申请许可成功 放行
                 return true;
             case TokenResultStatus.SHOULD_WAIT:
                 // Wait for next tick.
                 try {
-                    //需要等待
+                    //休眠指定时间再放行请求
                     Thread.sleep(result.getWaitInMs());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -254,7 +261,7 @@ public class FlowRuleChecker {
             case TokenResultStatus.BAD_REQUEST:
             case TokenResultStatus.FAIL:
             case TokenResultStatus.TOO_MANY_REQUEST:
-                //退化为单机限流
+                //根据规则配置的 fallbackToLocalWhenFail 是否为 true，决定是否回退为本地限流，如果需要回退为本地限流模式，则调用 passLocalCheck 方法重新判断
                 return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
             case TokenResultStatus.BLOCKED:
                 //抛出BlockedException

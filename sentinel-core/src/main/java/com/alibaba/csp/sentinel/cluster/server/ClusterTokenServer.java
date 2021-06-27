@@ -16,10 +16,7 @@
 package com.alibaba.csp.sentinel.cluster.server;
 
 /**
- * Token server interface for distributed flow control.
- *
- * @author Eric Zhao
- * @since 1.4.0
+ *  ClusterTokenServer 接口定义启动和停止集群限流客户端的方法，启动能够接收和响应客户端请求的网络通信服务端，根据接收的消费类型处理客户端的请求。
  */
 public interface ClusterTokenServer {
 

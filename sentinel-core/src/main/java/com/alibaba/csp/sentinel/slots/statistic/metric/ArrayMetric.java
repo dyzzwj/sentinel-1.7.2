@@ -34,6 +34,8 @@ import java.util.List;
  * @author Eric Zhao
  *
  *  滑动窗口核心实现类
+ *   集群限流使用的滑动窗口并非 本 滑动窗口，而是 sentinel-cluster-server-default 模块自己实现的滑动窗口。
+ *
  */
 public class ArrayMetric implements Metric {
 

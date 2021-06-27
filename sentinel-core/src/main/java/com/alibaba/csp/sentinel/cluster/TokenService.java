@@ -28,10 +28,12 @@ public interface TokenService {
     /**
      * Request tokens from remote token server.
      *
-     * @param ruleId the unique rule ID
-     * @param acquireCount token count to acquire
-     * @param prioritized whether the request is prioritized
+     * @param ruleId the unique rule ID 集群限流规则ID
+     * @param acquireCount token count to acquire 申请的令牌数
+     * @param prioritized whether the request is prioritized 请求优先级
      * @return result of the token request
+     *   向server申请令牌
+     *
      */
     TokenResult requestToken(Long ruleId, int acquireCount, boolean prioritized);
 
@@ -42,6 +44,8 @@ public interface TokenService {
      * @param acquireCount token count to acquire
      * @param params parameter list
      * @return result of the token request
+     *  用于支持热点参数集群限流
+     *
      */
     TokenResult requestParamToken(Long ruleId, int acquireCount, Collection<Object> params);
 }

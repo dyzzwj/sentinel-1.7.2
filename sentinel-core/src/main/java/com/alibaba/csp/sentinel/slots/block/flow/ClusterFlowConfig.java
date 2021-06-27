@@ -28,23 +28,37 @@ public class ClusterFlowConfig {
 
     /**
      * Global unique ID.
+     * 集群限流规则的全局唯一id
      */
     private Long flowId;
 
     /**
      * Threshold type (average by local value or global value).
+     *  集群限流阈值类型
+     *  FLOW_THRESHOLD_AVG_LOCAL 单机均摊阈值类型：根据当前连接到集群限流服务端的客户端节点数乘以规则配置的 count 作为集群的 QPS 限流阈值。
+     *  FLOW_THRESHOLD_GLOBAL 集群总阈值类型：将规则配置的 count 作为整个集群的 QPS 限流阈值。
      */
     private int thresholdType = ClusterRuleConstant.FLOW_THRESHOLD_AVG_LOCAL;
+    /**
+     * 失败时是否回退为本地限流模式
+     */
     private boolean fallbackToLocalWhenFail = true;
 
     /**
      * 0: normal.
+     *
      */
     private int strategy = ClusterRuleConstant.FLOW_CLUSTER_STRATEGY_NORMAL;
 
+    /**
+     * 抽样个数，一个统计时间间隔中包含的滑动窗口个数
+     */
     private int sampleCount = ClusterRuleConstant.DEFAULT_CLUSTER_SAMPLE_COUNT;
     /**
      * The time interval length of the statistic sliding window (in milliseconds)
+     *
+     *  一个统计的时间间隔
+     *
      */
     private int windowIntervalMs = RuleConstant.DEFAULT_WINDOW_INTERVAL_MS;
 
