@@ -60,7 +60,7 @@ public class FlowRule extends AbstractRule {
     /**
      * Flow control threshold count.
      *
-     *
+     * 流量控制阈值
      */
     private double count;
 
@@ -116,12 +116,15 @@ public class FlowRule extends AbstractRule {
     /**
      * Flow rule config for cluster mode.
      *
-     *  集群扩容相关配置，集群限流将在后续文章中重点介绍。
+     *  集群扩容相关配置
      */
     private ClusterFlowConfig clusterConfig;
 
     /**
      * The traffic shaping (throttling) controller.
+     *  根据controlBehavior生成对应的实现类
+     *  一个FlowRule对应一个TrafficShapingController
+     *
      */
     private TrafficShapingController controller;
 

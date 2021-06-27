@@ -15,12 +15,12 @@
  */
 package com.alibaba.csp.sentinel.cluster.flow.statistic.limit;
 
-import java.util.List;
-
 import com.alibaba.csp.sentinel.slots.statistic.base.LeapArray;
 import com.alibaba.csp.sentinel.slots.statistic.base.LongAdder;
 import com.alibaba.csp.sentinel.slots.statistic.base.UnaryLeapArray;
 import com.alibaba.csp.sentinel.util.AssertUtil;
+
+import java.util.List;
 
 /**
  * @author Eric Zhao
@@ -70,6 +70,7 @@ public class RequestLimiter {
     }
 
     public boolean canPass() {
+        //申请许可的请求是否超过了阈值
         return getQps() + 1 <= qpsAllowed;
     }
 
@@ -79,6 +80,7 @@ public class RequestLimiter {
     }
 
     public boolean tryPass() {
+        //申请许可的动作是否超过了阈值
         if (canPass()) {
             add(1);
             return true;

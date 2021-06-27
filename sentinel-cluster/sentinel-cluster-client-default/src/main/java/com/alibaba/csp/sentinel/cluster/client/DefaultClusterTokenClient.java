@@ -15,15 +15,7 @@
  */
 package com.alibaba.csp.sentinel.cluster.client;
 
-import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import com.alibaba.csp.sentinel.cluster.ClusterConstants;
-import com.alibaba.csp.sentinel.cluster.ClusterErrorMessages;
-import com.alibaba.csp.sentinel.cluster.ClusterTransportClient;
-import com.alibaba.csp.sentinel.cluster.TokenResult;
-import com.alibaba.csp.sentinel.cluster.TokenResultStatus;
-import com.alibaba.csp.sentinel.cluster.TokenServerDescriptor;
+import com.alibaba.csp.sentinel.cluster.*;
 import com.alibaba.csp.sentinel.cluster.client.config.ClusterClientAssignConfig;
 import com.alibaba.csp.sentinel.cluster.client.config.ClusterClientConfigManager;
 import com.alibaba.csp.sentinel.cluster.client.config.ServerChangeObserver;
@@ -35,6 +27,9 @@ import com.alibaba.csp.sentinel.cluster.response.ClusterResponse;
 import com.alibaba.csp.sentinel.cluster.response.data.FlowTokenResponseData;
 import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.util.StringUtil;
+
+import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Default implementation of {@link ClusterTokenClient}.
@@ -56,6 +51,7 @@ public class DefaultClusterTokenClient implements ClusterTokenClient {
                 changeServer(assignConfig);
             }
         });
+        //创建与token server之间的连接
         initNewConnection();
     }
 
@@ -66,6 +62,9 @@ public class DefaultClusterTokenClient implements ClusterTokenClient {
         return descriptor.getHost().equals(config.getServerHost()) && descriptor.getPort() == config.getServerPort();
     }
 
+    /**
+     * 在客户端启动的时候会创建与 TokenServer 之间的链接，即这边需要配置服务端的 IP 与端口号
+     */
     private void initNewConnection() {
         if (transportClient != null) {
             return;
@@ -148,13 +147,17 @@ public class DefaultClusterTokenClient implements ClusterTokenClient {
 
     @Override
     public TokenResult requestToken(Long flowId, int acquireCount, boolean prioritized) {
+        //校验参数
         if (notValidRequest(flowId, acquireCount)) {
             return badRequest();
         }
+        //构造请求参数
         FlowRequestData data = new FlowRequestData().setCount(acquireCount)
             .setFlowId(flowId).setPriority(prioritized);
+        //构造请求
         ClusterRequest<FlowRequestData> request = new ClusterRequest<>(ClusterConstants.MSG_TYPE_FLOW, data);
         try {
+            //发送请求 并返回解析后的响应
             TokenResult result = sendTokenRequest(request);
             logForResult(result);
             return result;

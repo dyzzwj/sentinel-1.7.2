@@ -48,7 +48,7 @@ public abstract class LeapArray<T> {
      */
     protected int windowLengthInMs;
     /**
-     * 抽样个数，就一个统计时间间隔中包含的滑动窗口个数，在 intervalInMs 相同的情况下，sampleCount 越多，抽样的统计数据就越精确，相应的需要的内存也越多。
+     * 抽样个数，一个统计时间间隔中包含的滑动窗口个数，在 intervalInMs 相同的情况下，sampleCount 越多，抽样的统计数据就越精确，相应的需要的内存也越多。
      */
     protected int sampleCount;
     /**
@@ -109,6 +109,11 @@ public abstract class LeapArray<T> {
      */
     protected abstract WindowWrap<T> resetWindowTo(WindowWrap<T> windowWrap, long startTime);
 
+    /**
+     * 计算当前时间对应的滑动窗口的下标
+     * @param timeMillis
+     * @return
+     */
     private int calculateTimeIdx(/*@Valid*/ long timeMillis) {
         //首先用当前时间除以一个时间窗口的时间间隔，得出当前时间是多少个时间窗口的倍数，用 n 表示
         long timeId = timeMillis / windowLengthInMs;
@@ -419,9 +424,12 @@ public abstract class LeapArray<T> {
      *
      * @param timeMillis a valid timestamp in milliseconds
      * @return the "head" bucket if it exists and is valid; otherwise null
+     *
+     *   为提供的时间戳获取滑动窗口的有效“头”桶。
      */
     WindowWrap<T> getValidHead(long timeMillis) {
         // Calculate index for expected head time.
+        //计算当前滑动窗口的下一个滑动窗口的下标
         int idx = calculateTimeIdx(timeMillis + windowLengthInMs);
 
         WindowWrap<T> wrap = array.get(idx);

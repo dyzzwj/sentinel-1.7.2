@@ -15,11 +15,11 @@
  */
 package com.alibaba.csp.sentinel.cluster.flow.statistic.metric;
 
-import java.util.List;
-
 import com.alibaba.csp.sentinel.cluster.flow.statistic.data.ClusterFlowEvent;
 import com.alibaba.csp.sentinel.cluster.flow.statistic.data.ClusterMetricBucket;
 import com.alibaba.csp.sentinel.util.AssertUtil;
+
+import java.util.List;
 
 /**
  * @author Eric Zhao
@@ -77,23 +77,38 @@ public class ClusterMetric {
      * @return time to wait for next bucket (in ms); 0 if cannot occupy next buckets
      */
     public int tryOccupyNext(ClusterFlowEvent event, int acquireCount, double threshold) {
+        /**
+         * event:ClusterFlowEvent.PASS
+         * int acquireCount：申请的许可数
+         * threshold ： 阈值
+         */
+
+        //获取当前正在访问的qps
         double latestQps = getAvg(ClusterFlowEvent.PASS);
+        //是否可以抢占
         if (!canOccupy(event, acquireCount, latestQps, threshold)) {
             return 0;
         }
+
         metric.addOccupyPass(acquireCount);
         add(ClusterFlowEvent.WAITING, acquireCount);
+        //返回一个滑动窗口的时间
         return 1000 / metric.getSampleCount();
     }
 
     private boolean canOccupy(ClusterFlowEvent event, int acquireCount, double latestQps, double threshold) {
+        //获取未来的下一个滑动窗口的已占用的许可数
         long headPass = metric.getFirstCountOfWindow(event);
+
         long occupiedCount = metric.getOccupiedCount(event);
         //  bucket to occupy (= incoming bucket)
         //       ↓
         // | head bucket |    |    |    | current bucket |
         // +-------------+----+----+----+----------- ----+
         //   (headPass)
+        /**
+         *
+         */
         return latestQps + (acquireCount + occupiedCount) - headPass <= threshold;
     }
 }

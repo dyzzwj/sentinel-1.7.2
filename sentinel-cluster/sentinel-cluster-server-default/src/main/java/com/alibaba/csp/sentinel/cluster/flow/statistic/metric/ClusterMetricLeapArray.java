@@ -83,10 +83,12 @@ public class ClusterMetricLeapArray extends LeapArray<ClusterMetricBucket> {
         if (event == null) {
             return 0;
         }
+        //获取当前滑动窗口的有效“头”桶。
         WindowWrap<ClusterMetricBucket> windowWrap = getValidHead();
         if (windowWrap == null) {
             return 0;
         }
+
         return windowWrap.value().get(event);
     }
 }

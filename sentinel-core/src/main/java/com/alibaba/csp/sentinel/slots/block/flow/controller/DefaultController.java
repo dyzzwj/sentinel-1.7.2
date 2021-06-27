@@ -27,6 +27,9 @@ import com.alibaba.csp.sentinel.util.TimeUtil;
  *
  * @author jialiang.linjl
  * @author Eric Zhao
+ *
+ *   快速失败
+ *
  */
 public class DefaultController implements TrafficShapingController {
 

@@ -187,11 +187,15 @@ public class FlowRuleChecker {
                                             boolean prioritized) {
         try {
             TokenService clusterService = pickClusterService();
-            if (clusterService == null) {
+            if (clusterService == null) { //如果无法获取到集群限流token服务
+                //如果该限流规则配置了可以退化为单机限流模式，则退化为单机限流。
                 return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
             }
+            //获取集群限流的流程id
             long flowId = rule.getClusterConfig().getFlowId();
+            //通过 TokenService 去申请 token，这里是与单机限流模式最大的差别
             TokenResult result = clusterService.requestToken(flowId, acquireCount, prioritized);
+            //应用申请token结果
             return applyTokenResult(result, rule, context, node, acquireCount, prioritized);
             // If client is absent, then fallback to local mode.
         } catch (Throwable ex) {
@@ -205,6 +209,7 @@ public class FlowRuleChecker {
     private static boolean fallbackToLocalOrPass(FlowRule rule, Context context, DefaultNode node, int acquireCount,
                                                  boolean prioritized) {
         if (rule.getClusterConfig().isFallbackToLocalWhenFail()) {
+            //如果该限流规则配置了可以退化为单机限流模式，则退化为单机限流。
             return passLocalCheck(rule, context, node, acquireCount, prioritized);
         } else {
             // The rule won't be activated, just pass.
@@ -213,9 +218,16 @@ public class FlowRuleChecker {
     }
 
     private static TokenService pickClusterService() {
+        /**
+         * 如果当前节点的角色为client  返回的 TokenService 为 DefaultClusterTokenClient（SPI机制）
+         * 关注 DefaultClusterTokenClient#initNewConnection()
+         */
+        //sentinel-cluster/sentinel-cluster-client-default/src/main/resources/META-INF/services/com.alibaba.csp.sentinel.cluster.client.ClusterTokenClient
         if (ClusterStateManager.isClient()) {
             return TokenClientProvider.getClient();
         }
+        //如果当前节点的角色为server 返回的 TokenService 为 ClusterTokenServer，这里使用了SPI机制，
+        //sentinel-cluster/sentinel-cluster-server-default/src/main/resources/META-INF/services/com.alibaba.csp.sentinel.cluster.TokenService
         if (ClusterStateManager.isServer()) {
             return EmbeddedClusterTokenServerProvider.getServer();
         }
@@ -227,10 +239,12 @@ public class FlowRuleChecker {
                                                          int acquireCount, boolean prioritized) {
         switch (result.getStatus()) {
             case TokenResultStatus.OK:
+                //申请许可成功
                 return true;
             case TokenResultStatus.SHOULD_WAIT:
                 // Wait for next tick.
                 try {
+                    //需要等待
                     Thread.sleep(result.getWaitInMs());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -240,8 +254,10 @@ public class FlowRuleChecker {
             case TokenResultStatus.BAD_REQUEST:
             case TokenResultStatus.FAIL:
             case TokenResultStatus.TOO_MANY_REQUEST:
+                //退化为单机限流
                 return fallbackToLocalOrPass(rule, context, node, acquireCount, prioritized);
             case TokenResultStatus.BLOCKED:
+                //抛出BlockedException
             default:
                 return false;
         }

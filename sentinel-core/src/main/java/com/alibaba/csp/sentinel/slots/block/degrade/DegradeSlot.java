@@ -26,6 +26,9 @@ import com.alibaba.csp.sentinel.spi.SpiOrder;
  * A {@link ProcessorSlot} dedicates to {@link DegradeRule} checking.
  *
  * @author leyou
+ *
+ *  则通过统计信息，以及预设的规则，来做熔断降级；
+ *
  */
 @SpiOrder(-1000)
 public class DegradeSlot extends AbstractLinkedProcessorSlot<DefaultNode> {

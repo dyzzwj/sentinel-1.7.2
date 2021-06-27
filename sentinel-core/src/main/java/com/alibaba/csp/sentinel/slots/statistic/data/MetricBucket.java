@@ -29,6 +29,7 @@ public class MetricBucket {
 
     private final LongAdder[] counters;
 
+
     private volatile long minRt;
 
     public MetricBucket() {

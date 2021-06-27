@@ -15,11 +15,11 @@
  */
 package com.alibaba.csp.sentinel.cluster.flow.statistic.limit;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.alibaba.csp.sentinel.cluster.server.config.ClusterServerConfigManager;
 import com.alibaba.csp.sentinel.util.AssertUtil;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Eric Zhao
@@ -47,6 +47,7 @@ public final class GlobalRequestLimiter {
         if (namespace == null) {
             return false;
         }
+        //RequestLimiter：对申请许可这个动作进行限流
         RequestLimiter limiter = GLOBAL_QPS_LIMITER_MAP.get(namespace);
         if (limiter == null) {
             return true;

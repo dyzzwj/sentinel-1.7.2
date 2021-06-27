@@ -52,6 +52,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * </ul>
  *
  * @author jialiang.linjl
+ *
+ *
  */
 public class DegradeRule extends AbstractRule {
 
@@ -67,16 +69,29 @@ public class DegradeRule extends AbstractRule {
 
     /**
      * RT threshold or exception ratio threshold count.
+     *  上面配置规则中对应的配置值，
+     *  例如当降级策略为RT时，表示设置的响应时间值
+     *  当降级策略为异常比例时，表示设置的比例值
+     *  当降级策略为异常数时，表示设置的异常数
      */
     private double count;
 
     /**
      * Degrade recover timeout (in seconds) when degradation occurs.
+     *  降级发生后多久进行恢复，即结束降级，单位为毫秒。
      */
     private int timeWindow;
 
     /**
      * Degrade strategy (0: average RT, 1: exception ratio, 2: exception count).
+     *
+     *降级策略，可以选值如下：
+     * 1）DEGRADE_GRADE_RT
+     * 响应时间。
+     * 2）DEGRADE_GRADE_EXCEPTION_RATIO
+     * 异常数比例。
+     * 3）DEGRADE_GRADE_EXCEPTION_COUNT
+     * 异常数量。
      */
     private int grade = RuleConstant.DEGRADE_GRADE_RT;
 
@@ -84,6 +99,8 @@ public class DegradeRule extends AbstractRule {
      * Minimum number of consecutive slow requests that can trigger RT circuit breaking.
      *
      * @since 1.7.0
+     * 触发 RT 响应熔断出现的最小连续慢响应请求数量。
+     *
      */
     private int rtSlowRequestAmount = RuleConstant.DEGRADE_DEFAULT_SLOW_REQUEST_AMOUNT;
 
@@ -91,6 +108,8 @@ public class DegradeRule extends AbstractRule {
      * Minimum number of requests (in an active statistic time span) that can trigger circuit breaking.
      *
      * @since 1.7.0
+     *  触发熔断最小的请求数量
+     *
      */
     private int minRequestAmount = RuleConstant.DEGRADE_DEFAULT_MIN_REQUEST_AMOUNT;
 
@@ -181,55 +200,82 @@ public class DegradeRule extends AbstractRule {
     private AtomicLong passCount = new AtomicLong(0);
     private final AtomicBoolean cut = new AtomicBoolean(false);
 
+    /**
+     * 根据当前请求的情况是否触发熔断
+     */
     @Override
     public boolean passCheck(Context context, DefaultNode node, int acquireCount, Object... args) {
+        //如果当前正在处于熔断降级中 将直接返回false 请求将被限流
         if (cut.get()) {
             return false;
         }
-
+        //根据资源名称获取对应的j集群类节点
         ClusterNode clusterNode = ClusterBuilderSlot.getClusterNode(this.getResource());
         if (clusterNode == null) {
             return true;
         }
 
+        /**
+         * 降级策略为基于响应时间的判断规则
+         */
         if (grade == RuleConstant.DEGRADE_GRADE_RT) {
+            //获取节点的平均响应时间
             double rt = clusterNode.avgRt();
             if (rt < this.count) {
+                //如果当前平均响应时间小于阈值
+                //重置passcount为0
                 passCount.set(0);
+                //放行
                 return true;
             }
 
             // Sentinel will degrade the service only if count exceeds.
+            /**
+             *   如果当前平均响应时间小于 大于 阈值，但连续请求次数 小于  触发 RT 响应熔断出现的最小连续慢响应请求数量 放行
+             *   只有当连续 rtSlowRequestAmount 次响应慢才会触发降级。
+             *   相当于样本数值太少
+             */
             if (passCount.incrementAndGet() < rtSlowRequestAmount) {
                 return true;
             }
         } else if (grade == RuleConstant.DEGRADE_GRADE_EXCEPTION_RATIO) {
+            //降级策略为根据异常比例
+
+            //异常qps
             double exception = clusterNode.exceptionQps();
+            //成功qps
             double success = clusterNode.successQps();
+            //总的qps
             double total = clusterNode.totalQps();
             // If total amount is less than minRequestAmount, the request will pass.
+            //如果总的qps 小于 触发熔断最小的请求数量   放行
             if (total < minRequestAmount) {
                 return true;
             }
 
             // In the same aligned statistic time window,
             // "success" (aka. completed count) = exception count + non-exception count (realSuccess)
+            //如果成功数 小于 异常数 并且异常数 小于 触发熔断最小的请求数量 放行
             double realSuccess = success - exception;
             if (realSuccess <= 0 && exception < minRequestAmount) {
                 return true;
             }
-
+            //如果异常比例小于阈值 放行
             if (exception / success < count) {
                 return true;
             }
         } else if (grade == RuleConstant.DEGRADE_GRADE_EXCEPTION_COUNT) {
+            //降级策略为根据异常数量
             double exception = clusterNode.totalException();
+            //如果异常数量小于阈值 放行
             if (exception < count) {
                 return true;
             }
         }
 
+        //如果符合触发熔断的规则（走到这就说明已经符合了））设置当前的熔断状态为true
         if (cut.compareAndSet(false, true)) {
+            //开启调度任务 在指定时间过后进行降级恢复
             ResetTask resetTask = new ResetTask(this);
             pool.schedule(resetTask, timeWindow, TimeUnit.SECONDS);
         }
