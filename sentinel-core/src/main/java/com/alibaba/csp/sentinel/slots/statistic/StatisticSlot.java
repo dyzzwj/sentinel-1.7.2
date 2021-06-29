@@ -178,6 +178,9 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             }
 
             // Record response time and success count.
+            /**
+             * 添加响应时间和成功指标
+             */
             node.addRtAndSuccess(rt, count);
             if (context.getCurEntry().getOriginNode() != null) {
                 context.getCurEntry().getOriginNode().addRtAndSuccess(rt, count);

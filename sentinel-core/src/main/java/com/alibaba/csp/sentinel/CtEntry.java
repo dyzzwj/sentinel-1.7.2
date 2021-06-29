@@ -28,11 +28,17 @@ import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
  * @author jialiang.linjl
  * @author Eric Zhao
  *
- *   同步调用调用信息封装对象
+ *   同步调用信息封装对象 主要保存了实体之间的关系、调用链、上下文信息
  */
 class CtEntry extends Entry {
 
+    /**
+     * entry的父entry，用于在同一个context上下文中，多次调用entry方法，保存entry之间的关系
+     */
     protected Entry parent = null;
+    /**
+     * entry的子entry，与parent相反
+     */
     protected Entry child = null;
 
     protected ProcessorSlot<Object> chain;
@@ -55,8 +61,10 @@ class CtEntry extends Entry {
         //第一调用Entry生成的时候(第一次调用SphU.entry()) context.getCurEntry必定是null
         this.parent = context.getCurEntry();
         if (parent != null) {
+            //context的curEntry为当前Entry的父entry
             ((CtEntry)parent).child = this;
         }
+        //设置context的当前entry
         context.setCurEntry(this);
     }
 

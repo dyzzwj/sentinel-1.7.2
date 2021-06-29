@@ -168,7 +168,7 @@ public class CtSph implements Sph {
         if (chain == null) {
             return new CtEntry(resourceWrapper, null, context);
         }
-        //根据插槽链chain生成Entry
+        //根据插槽链chain生成Entry  同时将当前entry设置为Context的curEntry
         Entry e = new CtEntry(resourceWrapper, chain, context);
         try {
             /**
