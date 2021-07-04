@@ -35,6 +35,7 @@ import java.util.List;
  *
  *  滑动窗口核心实现类
  *   集群限流使用的滑动窗口并非 本 滑动窗口，而是 sentinel-cluster-server-default 模块自己实现的滑动窗口。
+ *   ArrayMetric -> LeapArray -> WindowWrap -> MetricBucket
  *
  */
 public class ArrayMetric implements Metric {
@@ -263,6 +264,7 @@ public class ArrayMetric implements Metric {
         wrap.value().addSuccess(count);
     }
 
+    //ArrayMetric -> LeapArray -> WindowWrap -> MetricBucket
     @Override
     public void addPass(int count) {
         //当前时间戳对应的滑动窗口

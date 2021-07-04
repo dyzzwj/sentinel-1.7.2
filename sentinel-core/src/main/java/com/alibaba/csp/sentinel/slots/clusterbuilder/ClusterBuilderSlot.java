@@ -41,7 +41,11 @@ import java.util.Map;
  *
  * @author jialiang.linjl
  *
+ *
  *  用于存储资源的统计信息以及调用者信息，例如该资源的 RT, QPS, thread count 等等，这些信息将用作为多维度限流，降级的依据
+ *  如果当前资源未创建 ClusterNode，则为资源创建 ClusterNode；将 ClusterNode 赋值给当前资源的 DefaultNode.clusterNode；
+ *  如果调用来源（origin）不为空，则为调用来源创建 StatisticNode，用于实现按调用来源统计资源的指标数据，
+ *  ClusterNode 持有每个调用来源的 StatisticNode。
  */
 @SpiOrder(-9000)
 public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode> {

@@ -16,7 +16,6 @@
 package com.alibaba.csp.sentinel.slots.nodeselector;
 
 import com.alibaba.csp.sentinel.context.Context;
-import com.alibaba.csp.sentinel.context.ContextUtil;
 import com.alibaba.csp.sentinel.node.ClusterNode;
 import com.alibaba.csp.sentinel.node.DefaultNode;
 import com.alibaba.csp.sentinel.node.EntranceNode;
@@ -119,9 +118,9 @@ import java.util.Map;
  * {@code curl http://localhost:8719/tree?type=root}
  * </p>
  *
- * @author jialiang.linjl
- * @see EntranceNode
- * @see ContextUtil
+ *  为当前资源创建 DefaultNode，并且将 DefaultNode 赋值给 Context.curEntry.curNode；
+ *  如果当前调用链路上只出现过一次 SphU#entry（或多次Sphu#entry同一资源） 的情况，
+ *  将该 DefaultNode 添加到的 Context.entranceNode 的子节点，否则添加到 Context.curEntry.parent 的子节点（childList）
  */
 @SpiOrder(-10000)
 public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
@@ -209,10 +208,11 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
                     // Build invocation tree
                     //添加到context的node节点 这里构造了一棵树
                     /**
-                     * 构建调用链，由于 NodeSelectorSlot 是第一个进入的处理器，故此时 Context 的 curEntry 为 null ，
-                     * 故这里就是创建与上下文环境名称对应的节点会被添加到 ContextUtil 的 entry 创建的调用链入口节点(EntranceNode)，
                      *
-                     * 然后顺便更新 Context 中的 Entry curEntry 属性
+                     * 故这里就是创建与上下文环境名称对应的节点会被添加到 ContextUtil 的 entry 创建的调用链入口节点(EntranceNode)，
+                     * 将当前node作为「上下文」的最后一个节点的子节点添加进去
+                     * 如果context的curEntry.parent.curNode为null，则添加到entranceNode中去（context的curEntry属性在创建CtEbtry时赋值了）
+                     * 否则添加到context的curEntry.parent.curNode中去
                      */
                     ((DefaultNode) context.getLastNode()).addChild(node);
                 }
@@ -220,7 +220,9 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
             }
         }
 
-        //设置当前context的当前节点为node
+        //将该节点设置为「上下文」中的当前节点
+        // 实际是将当前节点赋值给context中curEntry的curNode
+        // 在Context的getLastNode中会用到在此处设置的curNode
         context.setCurNode(node);
         //调用下一个slot
         fireEntry(context, resourceWrapper, node, count, prioritized, args);

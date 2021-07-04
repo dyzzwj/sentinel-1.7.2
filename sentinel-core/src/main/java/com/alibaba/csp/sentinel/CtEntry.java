@@ -28,7 +28,10 @@ import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
  * @author jialiang.linjl
  * @author Eric Zhao
  *
- *   同步调用信息封装对象 主要保存了实体之间的关系、调用链、上下文信息
+ *
+ *   如果在处理一个请求的路径上多次调用 SphU#entry，那么这些 CtEntry 会构成一个双向链表。
+ *   在每次创建 CtEntry，都会将 Context.curEntry 设置为这个新的 CtEntry，
+ *   双向链表的作用就是在调用 CtEntry#exit 方法时，能够将 Context.curEntry 还原为上一个资源的 CtEntry。
  */
 class CtEntry extends Entry {
 
@@ -57,8 +60,9 @@ class CtEntry extends Entry {
         if (context instanceof NullContext) {
             return;
         }
-
-        //第一调用Entry生成的时候(第一次调用SphU.entry()) context.getCurEntry必定是null
+        //当在一个上下文中多次调用了 SphU#entry() 方法时，就会创建一棵调用链树(双向链表chile、parent)
+        //第一次调用SphU.entry()的时候 context.getCurEntry必定是null  后面exit时根据入口节点的parent为null说明该Entry已经是最顶层的根节点了，可以清除context。
+        //每个调用链的入口Entry的parent为null
         this.parent = context.getCurEntry();
         if (parent != null) {
             //context的curEntry为当前Entry的父entry

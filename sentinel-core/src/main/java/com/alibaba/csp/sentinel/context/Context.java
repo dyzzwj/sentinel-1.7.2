@@ -54,8 +54,10 @@ import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
  * @see ContextUtil
  * @see NodeSelectorSlot
  *
- *   一个线程对应一个context
  *
+ *   Context 通过 ThreadLocal 传递，只在调用链路的入口处创建。
+ *   代表调用链路上下文，贯穿一次调用链路中的所有 Entry。
+ *   Context 维持着入口节点（entranceNode）、本次调用链路的 curNode、调用来源（origin）等信息。
  */
 public class Context {
 
@@ -83,6 +85,9 @@ public class Context {
     /**
      * The origin of this context (usually indicate different invokers, e.g. service consumer name or origin IP).
      * 调用者来源
+     * 调用来源的名称，即服务消费者的名称或者服务消费者的来源 IP，取决于服务消费者是否使用 Sentinel，
+     * 由 Sentinel 适配层传递过来。例如：服务提供者是 Spring MVC 应用，且服务提供者使用 Sentinel 的 Web MVC 适配，
+     * 那么 Sentinel 会尝试从请求头获取"S-user"，如果服务消费者有在请求头传递这个参数，那么就能够获取到
      */
     private String origin = "";
 

@@ -103,7 +103,11 @@ public class StatisticNode implements Node {
     private transient Metric rollingCounterInMinute = new ArrayMetric(60, 60 * 1000, false);
 
     /**
-     *  当前线程计数器
+     *  当前线程计数器 统计并发使用的线程数
+     *  负责统计并行占用的线程数，用于实现信号量隔离，按资源所能并发占用的最大线程数实现限流。
+     *  当接收到一个请求就将 curThreadNum 自增 1，当处理完请求时就将 curThreadNum 自减一，
+     *  如果同时处理 10 个请求，那么 curThreadNum 的值就为 10
+     *
      */
     private LongAdder curThreadNum = new LongAdder();
 

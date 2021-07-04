@@ -39,6 +39,9 @@ import java.util.Set;
  * @see NodeSelectorSlot
  *
  *  用于在特定上下文环境中保存某一个资源的实时统计信息。
+ *  保存着某个resource在某个context中的实时指标，同一个resource的每个DefaultNode都指向一个ClusterNode
+ *
+ *  表示该 Node 用于统计哪个资源的实时指标数据，指标数据统计则由父类 StatisticNode 完成。
  */
 public class DefaultNode extends StatisticNode {
 

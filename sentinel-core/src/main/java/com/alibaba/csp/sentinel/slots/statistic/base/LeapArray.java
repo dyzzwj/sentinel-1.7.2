@@ -115,6 +115,13 @@ public abstract class LeapArray<T> {
      * @return
      */
     private int calculateTimeIdx(/*@Valid*/ long timeMillis) {
+        /**
+         * 另外timeId是会随着时间的增长而增加，当前时间每增长一个windowLength的长度，
+         * timeId就加1。但是idx不会增长，只会在0和1之间变换，因为array数组的长度是2，只有两个采样时间窗口。
+         * 至于为什么默认只有两个采样窗口，个人觉得因为sentinel是比较轻量的框架。时间窗口中保存着很多统计数据，
+         * 如果时间窗口过多的话，一方面会占用过多内存，另一方面时间窗口过多就意味着时间窗口的长度会变小，
+         * 如果时间窗口长度变小，就会导致时间窗口过于频繁的滑动。
+         */
         //首先用当前时间除以一个时间窗口的时间间隔，得出当前时间是多少个时间窗口的倍数，用 n 表示
         long timeId = timeMillis / windowLengthInMs;
         // Calculate current index so we can map the timestamp to the leap array.

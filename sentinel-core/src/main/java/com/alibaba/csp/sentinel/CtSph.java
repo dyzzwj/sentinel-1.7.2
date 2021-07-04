@@ -234,13 +234,25 @@ public class CtSph implements Sph {
                 if (chain == null) {
                     /**
                      * 这里重点想突出，如果同时在进入的资源个数超过 MAX_SLOT_CHAIN_SIZE，默认为 6000，会返回 null，
-                     * 则不对本次请求执行限流，熔断计算，而是直接跳过，这个点还是值得我们注意的。
+                     * 则不对本次请求执行限流，熔断计算，而是直接跳过，
                      */
                     if (chainMap.size() >= Constants.MAX_SLOT_CHAIN_SIZE) {
                         return null;
                     }
 
                     //初始化插槽链chain
+                    /**
+                     *  通过java spi规范生成chain   路径 ：  sentinel-core模块  resources/META-INF/services/com.alibaba.csp.sentinel.slotchain.ProcessorSlot
+                     *   责任链的设计模式
+                     *     chain.addLast(new NodeSelectorSlot());   链表第一个元素
+                     *     chain.addLast(new ClusterBuilderSlot());
+                     *     chain.addLast(new LogSlot());
+                     *     chain.addLast(new StatisticSlot());
+                     *     chain.addLast(new SystemSlot());
+                     *     chain.addLast(new AuthoritySlot());
+                     *     chain.addLast(new FlowSlot());
+                     *     chain.addLast(new DegradeSlot());        链表最后一个元素
+                     */
                     chain = SlotChainProvider.newSlotChain();
                     Map<ResourceWrapper, ProcessorSlotChain> newMap = new HashMap<ResourceWrapper, ProcessorSlotChain>(
                         chainMap.size() + 1);
