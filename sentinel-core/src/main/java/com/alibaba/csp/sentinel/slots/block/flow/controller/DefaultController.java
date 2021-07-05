@@ -28,7 +28,7 @@ import com.alibaba.csp.sentinel.util.TimeUtil;
  * @author jialiang.linjl
  * @author Eric Zhao
  *
- *   快速失败
+ *   快速失败  直接失败 抛异常
  *
  */
 public class DefaultController implements TrafficShapingController {
@@ -54,7 +54,7 @@ public class DefaultController implements TrafficShapingController {
         int curCount = avgUsedTokens(node);
         //如果当前时间窗口剩余令牌数小于需要申请的令牌数，则需要根据是否有优先级进行不同的处理。
         if (curCount + acquireCount > count) {
-            //如果该请求存在优先级，即 prioritized 设置为 true，并且流控类型为基于QPS进行限流
+            //如果该请求存在优先级，即 prioritized 为 true，并且流控类型为基于QPS进行限流
             //否则直接返回 false，最终会直接抛出 FlowException，即快速失败，应用方可以捕捉该异常，对其业务进行容错处理
             if (prioritized && grade == RuleConstant.FLOW_GRADE_QPS) {
                 long currentTime;

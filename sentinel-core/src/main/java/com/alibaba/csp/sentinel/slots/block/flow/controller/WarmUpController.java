@@ -60,6 +60,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * </p>
  *
  * @author jialiang.linjl
+ *    根据codeFactor（冷加载因子，默认为3）的值，即请求 QPS 从阈值 / codeFactor，经过预热时长，逐渐升至设定的QPS阈值；
  */
 public class WarmUpController implements TrafficShapingController {
 

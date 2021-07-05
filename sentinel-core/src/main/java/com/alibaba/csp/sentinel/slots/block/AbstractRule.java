@@ -41,6 +41,10 @@ public abstract class AbstractRule implements Rule {
      *
      *   需要限制的调用来源，对应【新增流控规则界面】的针对来源。
      *
+     *   Sentinel可以针对调用者进行限流，填写微服务名，指定对哪个微服务进行限流 ，默认default(不区分来源，全部限制)；
+     *   针对调用同一个资源时，Sentinel是能够区分不同调用者，为不同的调用者设置不一样的流控规则；
+     *   如：app-a设置QPS类型的流控，app-b设置线程数类型的流控。默认default，表示不区分调用者。
+     *
      */
     private String limitApp;
 

@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author jialiang.linjl
- *  匀速排队策略
+ *  匀速排队策略 让请求以匀速的速度通过，阈值类型必须设置为QPS
  *
  */
 public class RateLimiterController implements TrafficShapingController {
