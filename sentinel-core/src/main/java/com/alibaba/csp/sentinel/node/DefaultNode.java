@@ -62,7 +62,9 @@ public class DefaultNode extends StatisticNode {
     /**
      * Associated cluster node.
      *
-     * 集群节点，同样为 StatisticNode 的子类，表示与资源集群相关的环境。
+     * 集群节点
+     * 一个资源对应一个clusterNode 对应多个DefaultNode  同一个资源的多个DefaultNode对应一个clusterNode
+     *
      */
     private ClusterNode clusterNode;
 

@@ -86,6 +86,7 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args)
         throws Throwable {
+        //一个资源对应一个clusterNode 对应多个DefaultNode  同一个资源的多个DefaultNode对应一个clusterNode
         if (clusterNode == null) {
             synchronized (lock) {
                 if (clusterNode == null) {
@@ -109,9 +110,12 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
         if (!"".equals(context.getOrigin())) {
             /**
              * originNode ： 所谓的 orginNode，即在调用 ContextUtil 中 enter(String name, String origin) 方法中的第二个参数，
-             * 表示这条调用链的源头，在 Dubbo 中默认为 应用的 application
+             * 表示这条调用链的源头，
+             * 在 Dubbo 中默认为 应用的 application
              */
+            //在这里根据来源创建StatisticNode并关联
             Node originNode = node.getClusterNode().getOrCreateOriginNode(context.getOrigin());
+            //设置当前entry的调用方
             context.getCurEntry().setOriginNode(originNode);
         }
 

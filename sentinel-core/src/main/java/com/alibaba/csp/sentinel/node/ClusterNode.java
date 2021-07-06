@@ -71,7 +71,6 @@ public class ClusterNode extends StatisticNode {
      * at the very beginning while concurrent map will hold the lock all the time.
      * </p>
      *  来源指标数据统计
-     *
      */
     private Map<String, StatisticNode> originCountMap = new HashMap<>();
 
@@ -108,6 +107,7 @@ public class ClusterNode extends StatisticNode {
      * @return the {@link Node} of the specific origin
      */
     public Node getOrCreateOriginNode(String origin) {
+
         StatisticNode statisticNode = originCountMap.get(origin);
         if (statisticNode == null) {
             try {
