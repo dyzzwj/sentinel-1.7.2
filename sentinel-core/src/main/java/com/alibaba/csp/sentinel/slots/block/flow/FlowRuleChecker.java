@@ -111,7 +111,10 @@ public class FlowRuleChecker {
     }
 
     static Node selectReferenceNode(FlowRule rule, Context context, DefaultNode node) {
+
+        //关联资源或入口资源
         //关联资源名称 （如果策略是关联 则是关联的资源名称，如果策略是链路 则是上下文名称）
+
         String refResource = rule.getRefResource();
         int strategy = rule.getStrategy();
 
@@ -168,10 +171,12 @@ public class FlowRuleChecker {
          * String origin：本次请求的调用方，从当前上下文环境中获取，例如 dubbo 服务提供者，原始调用方为 dubbo 服务提供者的 application。
          */
         //如果限流规则配置的针对的调用方与当前请求实际调用来源匹配（并且不是 default、other)时的处理逻辑
+        //filterOrigin():origin既不是default 也不是other
         if (limitApp.equals(origin) && filterOrigin(origin)) {
             //如果流控模式为 RuleConstant.STRATEGY_DIRECT(直接)，则从 context 中获取源调用方所代表的 Node
             if (strategy == RuleConstant.STRATEGY_DIRECT) {
                 // Matches limit origin, return origin statistic node.
+                //ClusterBuilderSlot会设置context的originNode
                 return context.getOriginNode();
             }
             //配置的策略为关联或链路
