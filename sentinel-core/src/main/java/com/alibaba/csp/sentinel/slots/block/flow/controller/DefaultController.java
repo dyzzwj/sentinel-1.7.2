@@ -56,6 +56,11 @@ public class DefaultController implements TrafficShapingController {
 
         //当前已消耗的令牌数量，即当前时间窗口内已创建的线程数量(FLOW_GRADE_THREAD) 或已通过的请求个数(FLOW_GRADE_QPS)。
         int curCount = avgUsedTokens(node);
+
+        /**
+         * 注意 ： curCount + acquireCount > count非线程安全
+         *  在高并发场景下，如果有多个线程执行到了这个位置curCount + acquireCount > count ， 那么得到的结果就不是绝对正确的，会存在一定误差。 所以sentinel的限流，不是绝对准确的，
+         */
         //如果当前时间窗口剩余令牌数小于需要申请的令牌数，则需要根据是否有优先级进行不同的处理。
         if (curCount + acquireCount > count) {
             //如果该请求存在优先级，即 prioritized 为 true，并且流控类型为基于QPS进行限流

@@ -150,8 +150,15 @@ public class FlowRuleChecker {
 
     static Node selectNodeByRequesterAndStrategy(/*@NonNull*/ FlowRule rule, Context context, DefaultNode node) {
 
-        // The limit app should not be empty.
 
+        /**
+         *  DefaultNode：代表同一个资源在不同上下文中各自的流量情况 , 链路限流的时候使用的是这个，
+         *  因为入口会被不同的线程调用，所以取的是根据contextName走的DefaultNode
+         *  ClusterNode:代表同一个资源在不同上下文中总体的流量情况，默认限流和关联资源限流走的是这个，
+         *  因为这里面体现的是单个资源最直接的数据。
+         *  OriginNode:是一个StatisticNode类型的节点，代表了同个资源请求来源的流量情况 ，指定来源限流使用的是这个， 因为是根据不同的来源来创建OriginNode , 里面统计的也是这个来源的所有时间窗口数据
+         *
+         */
         String limitApp = rule.getLimitApp();
         int strategy = rule.getStrategy();
         String origin = context.getOrigin();
