@@ -89,6 +89,7 @@ public class OccupiableBucketLeapArray extends LeapArray<MetricBucket> {
     public long currentWaiting() {
         borrowArray.currentWindow();
         long currentWaiting = 0;
+        //获取borrowArray里的滑动窗口的
         List<MetricBucket> list = borrowArray.values();
 
         for (MetricBucket window : list) {

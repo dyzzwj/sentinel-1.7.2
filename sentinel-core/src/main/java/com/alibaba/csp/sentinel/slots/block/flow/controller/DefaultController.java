@@ -34,7 +34,7 @@ import com.alibaba.csp.sentinel.util.TimeUtil;
 public class DefaultController implements TrafficShapingController {
 
     private static final int DEFAULT_AVG_USED_TOKENS = 0;
-    //流控规则中配置的阔值(即一个时间窗口中总的令牌个数)
+    //流控规则中配置的阔值(即一个时间窗口中允许的总令牌个数)
     private double count;
     private int grade;
 
@@ -50,6 +50,10 @@ public class DefaultController implements TrafficShapingController {
 
     @Override
     public boolean canPass(Node node, int acquireCount, boolean prioritized) {
+        /**
+         * node:根据 limitApp 与 strategy 选出来的 Node（StatisticNode、DefaultNode、ClusterNode)
+         */
+
         //当前已消耗的令牌数量，即当前时间窗口内已创建的线程数量(FLOW_GRADE_THREAD) 或已通过的请求个数(FLOW_GRADE_QPS)。
         int curCount = avgUsedTokens(node);
         //如果当前时间窗口剩余令牌数小于需要申请的令牌数，则需要根据是否有优先级进行不同的处理。

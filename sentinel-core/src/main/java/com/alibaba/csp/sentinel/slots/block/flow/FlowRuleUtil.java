@@ -15,16 +15,6 @@
  */
 package com.alibaba.csp.sentinel.slots.block.flow;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.slots.block.ClusterRuleConstant;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
@@ -35,6 +25,10 @@ import com.alibaba.csp.sentinel.slots.block.flow.controller.WarmUpRateLimiterCon
 import com.alibaba.csp.sentinel.util.StringUtil;
 import com.alibaba.csp.sentinel.util.function.Function;
 import com.alibaba.csp.sentinel.util.function.Predicate;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Eric Zhao
@@ -102,10 +96,12 @@ public final class FlowRuleUtil {
             if (filter != null && !filter.test(rule)) {
                 continue;
             }
+            //限制来源为空  设置为default 即限制所有来源
             if (StringUtil.isBlank(rule.getLimitApp())) {
                 rule.setLimitApp(RuleConstant.LIMIT_APP_DEFAULT);
             }
 
+            //根据配置生成流量效果控制器
             TrafficShapingController rater = generateRater(rule);
             rule.setRater(rater);
 
