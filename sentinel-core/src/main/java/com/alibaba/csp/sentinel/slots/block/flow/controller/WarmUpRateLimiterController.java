@@ -44,25 +44,40 @@ public class WarmUpRateLimiterController extends WarmUpController {
 
     @Override
     public boolean canPass(Node node, int acquireCount, boolean prioritized) {
+        //获取当前滑动窗口的前一个窗口收集的通过QPS
         long previousQps = (long) node.previousPassQps();
+        //更新 storedTokens 与 lastFilledTime 的值，即按照令牌发放速率发送指定令牌
         syncToken(previousQps);
 
         long currentTime = TimeUtil.currentTimeMillis();
-
+        //当前已发放的许可
         long restToken = storedTokens.get();
         long costTime = 0;
         long expectedTime = 0;
+        //已发放的许可 大于 warningToken 进入梯形区域
+
+        /**
+         * 与RateLimiter的区别就是计算获取一个许可的时间是warmup的
+         */
         if (restToken >= warningToken) {
             long aboveToken = restToken - warningToken;
 
             // current interval = restToken*slope+1/count
+            // aboveToken * slope + 1.0 / count ：当前获取一个perimit需要的时间
+            //1.0 / (aboveToken * slope + 1.0 / count) : 当前的速率
+            //waringTokens随着的时间的推移 越来与小(速率越来越快) 当stroedToken <= warningToken 趋于平稳
             double warmingQps = Math.nextUp(1.0 / (aboveToken * slope + 1.0 / count));
+            //获取acquireCount个许可需要的时间
             costTime = Math.round(1.0 * (acquireCount) / warmingQps * 1000);
         } else {
+            //获取acquireCount个许可需要的时间
+            //走到这里 没有梯形区域 获取一个许可的时间是稳定的
             costTime = Math.round(1.0 * (acquireCount) / count * 1000);
         }
+        //计算成功获取acquireCount个数量的令牌的时间戳
         expectedTime = costTime + latestPassedTime.get();
 
+        //如果能成功获取acquireCount个数量的令牌的时间戳 小于当前时间 （现在就可以直接获得acquireCount个数量的令牌）
         if (expectedTime <= currentTime) {
             latestPassedTime.set(currentTime);
             return true;
