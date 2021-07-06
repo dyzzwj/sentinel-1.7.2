@@ -106,6 +106,7 @@ public class FlowRuleManager {
         return flowRules.containsKey(resource);
     }
 
+
     public static boolean isOtherOrigin(String origin, String resourceName) {
         if (StringUtil.isEmpty(origin)) {
             return false;
@@ -115,6 +116,7 @@ public class FlowRuleManager {
 
         if (rules != null) {
             for (FlowRule rule : rules) {
+                //相当于除了rule.getLimitApp() 其他的都要限流
                 if (origin.equals(rule.getLimitApp())) {
                     return false;
                 }

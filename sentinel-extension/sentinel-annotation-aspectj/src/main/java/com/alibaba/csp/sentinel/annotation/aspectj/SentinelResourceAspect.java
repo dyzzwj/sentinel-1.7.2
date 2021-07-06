@@ -31,6 +31,9 @@ import java.lang.reflect.Method;
  * Aspect for methods with {@link SentinelResource} annotation.
  *
  * @author Eric Zhao
+ *
+ *  sentinel对spring的支持
+ *
  */
 @Aspect
 public class SentinelResourceAspect extends AbstractSentinelAspectSupport {

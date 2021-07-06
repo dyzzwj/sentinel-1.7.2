@@ -104,25 +104,35 @@ public class FlowRuleChecker {
             return true;
         }
         /**
+         *  获取配置的流控效果 控制器 （1. 直接拒绝 2. 预热启动 3. 排队 4. 预热启动排队等待)
          * 调用 FlowRule 内部持有的流量控制器来判断是否符合流控规则，最终调用的是 TrafficShapingController canPass 方法
          */
         return rule.getRater().canPass(selectedNode, acquireCount, prioritized);
     }
 
     static Node selectReferenceNode(FlowRule rule, Context context, DefaultNode node) {
+
         //关联资源或入口资源
+        //关联资源名称 （如果策略是关联 则是关联的资源名称，如果策略是链路 则是上下文名称）
+
         String refResource = rule.getRefResource();
         int strategy = rule.getStrategy();
 
         if (StringUtil.isEmpty(refResource)) {
             return null;
         }
-        //如果流控模式为 RuleConstant.STRATEGY_RELATE(关联)，则从集群环境中获取对应关联资源所代表的 Node，
-        // 通过(ClusterBuilderSlot会收集每一个资源的实时统计信息，子集群限流时详细介绍)
+        /**
+         * STRATEGY_RELATE 关联其他的指定资源，如资源A想以资源B的流量状况来决定是否需要限流，这时资源A规则配置可以使用 STRATEGY_RELATE 策略
+         * 如果流控模式为 RuleConstant.STRATEGY_RELATE(关联)，则从集群环境中获取对应关联资源所代表的 Node，
+         * 通过(ClusterBuilderSlot会收集每一个资源的实时统计信息)
+         */
+        //
         if (strategy == RuleConstant.STRATEGY_RELATE) {
+            //获取关联资源的集群节点
             return ClusterBuilderSlot.getClusterNode(refResource);
         }
         /**
+         *  STRATEGY_CHAIN 对指定入口的流量限流，因为流量可以有多个不同的入口（EntranceNode）
          * 如果流控模式为 RuleConstant.STRATEGY_CHAIN(调用链)，则判断当前调用上下文的入口资源与规则配置的是否一样，
          * 如果是，则返回入口资源对应的 Node，否则返回 null，注意：返回空则该条流控规则直接通过。【
          */
@@ -162,7 +172,7 @@ public class FlowRuleChecker {
                 //ClusterBuilderSlot会设置context的originNode
                 return context.getOriginNode();
             }
-
+            //配置的策略为关联或链路
             return selectReferenceNode(rule, context, node);
 
         } else if (RuleConstant.LIMIT_APP_DEFAULT.equals(limitApp)) {
@@ -175,9 +185,10 @@ public class FlowRuleChecker {
 
             return selectReferenceNode(rule, context, node);
         } else if (RuleConstant.LIMIT_APP_OTHER.equals(limitApp)
+                //FlowRuleManager.isOtherOrigin(origin, rule.getResource())：返回true表示要进行限流判断
             && FlowRuleManager.isOtherOrigin(origin, rule.getResource())) {
             /**
-             *   流控规则针对调用方如果设置为 other，表示针对    没有配置流控规则的资源。 流控规则是针对非FlowRule里limitApp的其他所有调用方
+             *   流控规则针对调用方如果设置为 other，表示针对 没有配置流控规则的资源。 流控规则是针对FlowRule里 非limitApp的其他所有调用方
              *
              * 如果流控规则针对的调用方为(other)，此时需要判断是否有针对当前的流控规则，
              * 只要存在，则这条规则对当前资源“失效”，如果针对该资源没有配置其他额外的流控规则，则获取实时统计节点(Node)的处理逻辑为：

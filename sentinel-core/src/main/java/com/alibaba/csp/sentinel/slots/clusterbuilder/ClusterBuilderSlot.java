@@ -68,7 +68,8 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
      * at the very beginning while concurrent map will hold the lock all the time.
      * </p>
      *
-     *  持有的集群节点缓存表，其键为 Entrance Node 所对应的资源ID，即 Context 中关联的节点信息。
+     *  持有的全局集群节点缓存表，其键为 Entrance Node 所对应的资源ID，即 Context 中关联的节点信息。
+     *  因为是static的 所以所有的ClusterBuilderSlot对象共享这一个map
      */
     private static volatile Map<ResourceWrapper, ClusterNode> clusterNodeMap = new HashMap<>();
 

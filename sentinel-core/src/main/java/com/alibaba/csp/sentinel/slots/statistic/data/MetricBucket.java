@@ -27,9 +27,15 @@ import com.alibaba.csp.sentinel.slots.statistic.base.LongAdder;
  */
 public class MetricBucket {
 
+    /**
+     * counters 的长度是需要统计的事件种类数，目前是 6 个。LongAdder 是线程安全的计数器，性能优于 AtomicLong
+     */
     private final LongAdder[] counters;
 
 
+    /**
+     * 最小响应时间
+     */
     private volatile long minRt;
 
     public MetricBucket() {

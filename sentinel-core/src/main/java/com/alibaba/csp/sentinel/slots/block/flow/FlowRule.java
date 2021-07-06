@@ -82,6 +82,7 @@ public class FlowRule extends AbstractRule {
      * Reference resource in flow control with relevant resource or context.
      *
      *  关联资源或入口资源，当流控模式为关联或链路时配置的关联资源或入口资源，对应【新增流控规则界面】的【入口资源】
+     *  关联资源名称 （如果策略是关联 则是关联的资源名称，如果策略是链路 则是上下文名称）
      */
     private String refResource;
 
@@ -125,6 +126,7 @@ public class FlowRule extends AbstractRule {
      *  根据controlBehavior生成对应的实现类
      *  一个FlowRule对应一个TrafficShapingController
      *
+     *  流控效果
      */
     private TrafficShapingController controller;
 

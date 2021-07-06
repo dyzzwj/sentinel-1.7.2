@@ -15,14 +15,17 @@
  */
 package com.alibaba.csp.sentinel.slots.block.flow.controller;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import com.alibaba.csp.sentinel.node.Node;
 import com.alibaba.csp.sentinel.util.TimeUtil;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author jialiang.linjl
  * @since 1.4.0
+ *
+ *  Warmup + 匀速排队
+ *
  */
 public class WarmUpRateLimiterController extends WarmUpController {
 

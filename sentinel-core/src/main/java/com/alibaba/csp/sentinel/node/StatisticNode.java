@@ -322,19 +322,23 @@ public class StatisticNode implements Node {
          *  acquireCount：需要的令牌数
          *  threshold：总令牌数
          */
-        //下一个统计的时间间隔内总的令牌数
+        //下一个周期内允许的总令牌数
         double maxCount = threshold * IntervalProperty.INTERVAL / 1000;
         //获取下一个周期内 所有滑动窗口已经被占用的令牌数
         long currentBorrow = rollingCounterInSecond.waiting();
 
-        //下一个统计的事件间隔内滑动窗口的已全被占用
+        //下一个统计的事件间隔内（周期）的所有令牌已全被占用
         if (currentBorrow >= maxCount) {
             return OccupyTimeoutProperty.getOccupyTimeout();
         }
+
+       // 下一个统计的事件间隔内（周期）还有令牌
+
         //每个窗口的时间间隔
         int windowLength = IntervalProperty.INTERVAL / SampleCountProperty.SAMPLE_COUNT;
         //  currentTime - currentTime % windowLength ：滑动窗口的起始位置
-        //下一个滑动窗口的结束位置
+        //上一个滑动窗口的开始时间
+        // currentTime - currentTime % windowLength：当前滑动窗口的开始时间
         long earliestTime = currentTime - currentTime % windowLength + windowLength - IntervalProperty.INTERVAL;
 
         int idx = 0;
@@ -344,19 +348,19 @@ public class StatisticNode implements Node {
          * lead more tokens be borrowed.
          */
 
-        //当前时间间隔内 已发放的令牌
+        //当前周期内 已发放的令牌
         long currentPass = rollingCounterInSecond.pass();
         //如果下一个滑动窗口的结束时间 < 当前时间
         while (earliestTime < currentTime) {
-            //当前时间到下一个滑动窗口的间隔
+            //当前时间到下一个滑动窗口的间隔  idx表示到下第几个窗口的时间间隔
             long waitInMs = idx * windowLength + windowLength - currentTime % windowLength;
             //OccupyTimeoutProperty.getOccupyTimeout : 500
             if (waitInMs >= OccupyTimeoutProperty.getOccupyTimeout()) {
                 break;
             }
-            // 下一个滑动窗口 已发放的令牌
+            // 上一个滑动窗口 已发放的令牌
             long windowPass = rollingCounterInSecond.getWindowPass(earliestTime);
-            //如果当前时间间隔内已发放的令牌 + 下一个周期内 所有滑动窗口已经被占用的令牌数 + 需要的令牌数 - 下一个滑动窗口 已发放的令牌 < 下一个统计的时间间隔内总的令牌数
+            //如果当前时间间隔内已发放的令牌 + 下一个周期内 所有滑动窗口已经被占用的令牌数 + 需要的令牌数 - 上一个滑动窗口 已发放的令牌 < 下一个统计的时间间隔内总的令牌数
             if (currentPass + currentBorrow + acquireCount - windowPass <= maxCount) {
                 //返回当前时间到下一个滑动窗口的间隔
                 return waitInMs;

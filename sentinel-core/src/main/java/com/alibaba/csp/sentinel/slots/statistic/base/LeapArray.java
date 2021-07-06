@@ -412,6 +412,8 @@ public abstract class LeapArray<T> {
         if (timeMillis < 0) {
             return new ArrayList<T>();
         }
+        //如果是LeapArray array代表当前时间窗口的时间周期
+        //如果是FutureBucketLeapArray，代表的是下一个的时间周期
         int size = array.length();
         List<T> result = new ArrayList<T>(size);
 
