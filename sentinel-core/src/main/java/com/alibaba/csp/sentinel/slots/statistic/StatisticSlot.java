@@ -71,15 +71,17 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             /**
              * 如果后续处理器成功执行，即能通过SlotChain中后面的Slot的entry方法，说明没有被限流或降级
              * 则将正在执行线程数统计指标加一，并将通过的请求数量指标增加对应的值。
-             * 下文会对 Sentinel Node 体系进行详细的介绍，在 Sentinel 中使用 Node 来表示调用链中的某一个节点，
-             * 每个节点关联一个资源，资源的实时统计信息就存储在 Node 中，故该部分也是调用 DefaultNode 的相关方法来改变线程数等，将在下文会向详细介绍。
+             *
+             * 每个节点关联一个资源，资源的实时统计信息就存储在 Node 中，故该部分也是调用 DefaultNode 的相关方法来改变线程数等。
              */
             // Request passed, add thread count and pass count.
             node.increaseThreadNum();
             node.addPassRequest(count);
 
             /**
-             * 如果上下文环境中保存了调用的源头（调用方）的节点信息不为空 则更新该节点的统计数据 ：线程数与通过数量
+             * 如果上下文环境中保存的调用源头（调用方）的节点信息不为空 则更新该节点的统计数据 ：线程数与通过数量
+             *
+             *  ClusterBuilderSlot中设置的OriginNode
              */
             if (context.getCurEntry().getOriginNode() != null) {
                 // Add count for origin node.
@@ -167,11 +169,12 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
         if (context.getCurEntry().getError() == null) {
             /**
-             * 成功执行，则重点关注响应时间，其实现亮点如下：
+             * 成功执行，则重点关注响应时间和当前线程数，其实现如下：
              * 计算本次响应时间，将本次响应时间收集到 Node 中。
              * 将当前活跃线程数减一
              */
             // Calculate response time (max RT is statisticMaxRt from SentinelConfig).
+            //计算响应时间
             long rt = TimeUtil.currentTimeMillis() - context.getCurEntry().getCreateTime();
             int maxStatisticRt = SentinelConfig.statisticMaxRt();
             if (rt > maxStatisticRt) {

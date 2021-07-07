@@ -249,11 +249,13 @@ public class StatisticNode implements Node {
 
     @Override
     public double avgRt() {
+        //当前周期内(1s)成功数
         long successCount = rollingCounterInSecond.success();
         if (successCount == 0) {
             return 0;
         }
 
+        //当前周期内（1s）总的响应时间  / 当前周期内(1s)成功数
         return rollingCounterInSecond.rt() * 1.0 / successCount;
     }
 

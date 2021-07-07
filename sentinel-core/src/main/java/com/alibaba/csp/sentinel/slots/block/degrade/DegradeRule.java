@@ -198,6 +198,10 @@ public class DegradeRule extends AbstractRule {
     // Internal implementation (will be deprecated and moved outside).
 
     private AtomicLong passCount = new AtomicLong(0);
+
+    /**
+     * 当前熔断状态
+     */
     private final AtomicBoolean cut = new AtomicBoolean(false);
 
     /**
@@ -209,7 +213,7 @@ public class DegradeRule extends AbstractRule {
         if (cut.get()) {
             return false;
         }
-        //根据资源名称获取对应的j集群类节点
+        //根据资源名称获取对应的集群类节点
         ClusterNode clusterNode = ClusterBuilderSlot.getClusterNode(this.getResource());
         if (clusterNode == null) {
             return true;
@@ -219,7 +223,7 @@ public class DegradeRule extends AbstractRule {
          * 降级策略为基于响应时间的判断规则
          */
         if (grade == RuleConstant.DEGRADE_GRADE_RT) {
-            //获取节点的平均响应时间
+            //获取节点的当前周期内（1s）平均响应时间
             double rt = clusterNode.avgRt();
             if (rt < this.count) {
                 //如果当前平均响应时间小于阈值
@@ -241,9 +245,9 @@ public class DegradeRule extends AbstractRule {
         } else if (grade == RuleConstant.DEGRADE_GRADE_EXCEPTION_RATIO) {
             //降级策略为根据异常比例
 
-            //异常qps
+            //异常qps 一个周期内（1s）总异常数 /  一个周期
             double exception = clusterNode.exceptionQps();
-            //成功qps
+            //成功qps 一个周期内（1s）总成功数 /  一个周期
             double success = clusterNode.successQps();
             //总的qps
             double total = clusterNode.totalQps();
@@ -266,6 +270,7 @@ public class DegradeRule extends AbstractRule {
             }
         } else if (grade == RuleConstant.DEGRADE_GRADE_EXCEPTION_COUNT) {
             //降级策略为根据异常数量
+            //获取一分钟内的异常数量
             double exception = clusterNode.totalException();
             //如果异常数量小于阈值 放行
             if (exception < count) {

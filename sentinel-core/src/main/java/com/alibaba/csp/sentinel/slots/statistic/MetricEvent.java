@@ -22,13 +22,21 @@ public enum MetricEvent {
 
     /**
      * Normal pass.
+     * 成功获得令牌
      */
     PASS,
     /**
      * Normal block.
+     * 未获得令牌
      */
     BLOCK,
+    /**
+     *  执行过程中出现异常
+     */
     EXCEPTION,
+    /**
+     * 指成功执行完资源
+     */
     SUCCESS,
     RT,
 

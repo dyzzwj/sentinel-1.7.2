@@ -104,9 +104,11 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
         }
         node.setClusterNode(clusterNode);
 
-        /*
+        /**
          * if context origin is set, we should get or create a new {@link Node} of
          * the specific origin.
+         *
+         * ContextUtil.enter(java.lang.String, java.lang.String)时设置的
          */
         if (!"".equals(context.getOrigin())) {
             /**
@@ -152,6 +154,7 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
         ClusterNode clusterNode = null;
 
         for (EntryType nodeType : EntryType.values()) {
+            //从全局缓存中获取该资源对应的集群节点
             clusterNode = clusterNodeMap.get(new StringResourceWrapper(id, nodeType));
             if (clusterNode != null) {
                 break;
