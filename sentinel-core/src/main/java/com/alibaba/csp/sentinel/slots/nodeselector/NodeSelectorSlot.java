@@ -118,6 +118,8 @@ import java.util.Map;
  * {@code curl http://localhost:8719/tree?type=root}
  * </p>
  *
+ *   构建资源（Resource）的路径（DefaultNode），用树的结构存储
+ *
  *  为当前资源创建 DefaultNode，并且将 DefaultNode 赋值给 Context.curEntry.curNode；
  *  如果当前调用链路上只出现过一次 SphU#entry（或多次Sphu#entry同一资源） 的情况，
  *  将该 DefaultNode 添加到的 Context.entranceNode 的子节点，否则添加到 Context.curEntry.parent 的子节点（childList）
@@ -130,9 +132,9 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
      *
      *  k - 上下文环境Context的名称 通常是进入节点的名称
      *
+     *  一个Resource 对应一个NodeSelectorSlot实例 即对应一个这个map  map的key是Context，所以这个map存储的Node是Context+Resource维度的Node
      *   一个 NodeSelectorSlot 对象会被多个线程使用，其共享的维度为资源，
      *   即多个线程进入同一个资源保护的代码时，执行的是同一个 NodeSelectorSlot 对象
-     *
      */
     private volatile Map<String, DefaultNode> map = new HashMap<String, DefaultNode>(10);
 

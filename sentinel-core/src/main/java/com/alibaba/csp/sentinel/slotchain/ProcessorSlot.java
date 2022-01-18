@@ -28,6 +28,8 @@ import com.alibaba.csp.sentinel.context.Context;
 public interface ProcessorSlot<T> {
 
     /**
+     *
+     * // Sph.entry时触发
      * Entrance of this slot.
      *
      * @param context         current {@link Context}
@@ -42,6 +44,8 @@ public interface ProcessorSlot<T> {
                Object... args) throws Throwable;
 
     /**
+     *
+     *  // 执行下一个Slot的entry方法
      * Means finish of {@link #entry(Context, ResourceWrapper, Object, int, boolean, Object...)}.
      *
      * @param context         current {@link Context}
@@ -57,7 +61,7 @@ public interface ProcessorSlot<T> {
 
     /**
      * Exit of this slot.
-     *
+     * // Entry.exit时触发
      * @param context         current {@link Context}
      * @param resourceWrapper current resource
      * @param count           tokens needed
@@ -66,6 +70,7 @@ public interface ProcessorSlot<T> {
     void exit(Context context, ResourceWrapper resourceWrapper, int count, Object... args);
 
     /**
+     * // 执行下一个Slot的exit方法
      * Means finish of {@link #exit(Context, ResourceWrapper, int, Object...)}.
      *
      * @param context         current {@link Context}

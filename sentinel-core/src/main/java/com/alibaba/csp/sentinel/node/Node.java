@@ -30,6 +30,7 @@ import java.util.Map;
  * @author leyou
  * @author Eric Zhao
  *
+ *
  *  持有实时统计信息的节点  定义了收集统计信息与获取统计信息的接口
  *
  */

@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @author jialiang.linjl
  *
- *
+ *  降级规则
  */
 public class DegradeRule extends AbstractRule {
 
@@ -108,7 +108,7 @@ public class DegradeRule extends AbstractRule {
      * Minimum number of requests (in an active statistic time span) that can trigger circuit breaking.
      *
      * @since 1.7.0
-     *  触发熔断最小的请求数量
+     *  触发熔断最小的请求数量  暂不支持配置
      *
      */
     private int minRequestAmount = RuleConstant.DEGRADE_DEFAULT_MIN_REQUEST_AMOUNT;

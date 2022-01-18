@@ -36,6 +36,10 @@ import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 class CtEntry extends Entry {
 
     /**
+     * parent和child:将多个Entry串联成了链表，当多次调用Sph.entry时会形成一个调用链，当调用Entry.exit时，会将自己从链表中移除
+     */
+
+    /**
      * entry的父entry，用于在同一个context上下文中，多次调用entry方法，保存entry之间的关系
      */
     protected Entry parent = null;
@@ -43,7 +47,7 @@ class CtEntry extends Entry {
      * entry的子entry，与parent相反
      */
     protected Entry child = null;
-
+    // ProcessorSlot，实际上是ProcessorSlotChain，代表了当前Entry需要经过的规则检查（如FlowRule限流规则检查）
     protected ProcessorSlot<Object> chain;
     protected Context context;
 
@@ -78,12 +82,15 @@ class CtEntry extends Entry {
     }
 
     protected void exitForContext(Context context, int count, Object... args) throws ErrorEntryFreeException {
+        // 如果Entry已经调用过一次退出，这里不会再次退出
         if (context != null) {
             // Null context should exit without clean-up.
+            // NullContext忽略
             if (context instanceof NullContext) {
                 return;
             }
             if (context.getCurEntry() != this) {
+                // 错误的entry退出，清空context中的所有entry并抛出异常
                 String curEntryNameInContext = context.getCurEntry() == null ? null : context.getCurEntry().getResourceWrapper().getName();
                 // Clean previous call stack.
                 CtEntry e = (CtEntry)context.getCurEntry();
@@ -95,10 +102,14 @@ class CtEntry extends Entry {
                     + ", current entry in context: <%s>, but expected: <%s>", curEntryNameInContext, resourceWrapper.getName());
                 throw new ErrorEntryFreeException(errorMessage);
             } else {
+                // 正常的entry退出
+                // 1. 执行所有Slot的exit方法
                 if (chain != null) {
                     chain.exit(context, resourceWrapper, count, args);
                 }
+
                 // Restore the call stack.
+                // 3. context中entry链表移除当前entry
                 context.setCurEntry(parent);
                 if (parent != null) {
                     ((CtEntry)parent).child = null;
@@ -109,6 +120,7 @@ class CtEntry extends Entry {
                         ContextUtil.exit();
                     }
                 }
+                // 4. 当前entry.context = null，防止重复exit
                 // Clean the reference of context in current entry to avoid duplicate exit.
                 clearEntryContext();
             }

@@ -38,10 +38,13 @@ import java.util.Set;
  * @author qinan.qn
  * @see NodeSelectorSlot
  *
+ *      统计维度是Context + Resource，表示同一个上下文中的同一资源，共享一个DefaultNode实例，在NodeSelectorSlot中创建；。
  *  用于在特定上下文环境中保存某一个资源的实时统计信息。
  *  保存着某个resource在某个context中的实时指标，同一个resource的每个DefaultNode都指向一个ClusterNode
  *
  *  表示该 Node 用于统计哪个资源的实时指标数据，指标数据统计则由父类 StatisticNode 完成。
+ *  DefaultNode重写了StaticNode更新统计数据的相关方法，如increaseBlockQps增加被拒绝的QPS时，额外调用了ClusterNode的increaseBlockQps方法。
+ *
  */
 public class DefaultNode extends StatisticNode {
 
@@ -55,14 +58,14 @@ public class DefaultNode extends StatisticNode {
     /**
      * The list of all child nodes.
      *
-     * 子节点结合。以此来维持其调用链
+     * 子节点结合。以此来维持其调用链 通过这种方式，DefaultNode构成了一颗树。
      */
     private volatile Set<Node> childList = new HashSet<>();
 
     /**
      * Associated cluster node.
      *
-     * 集群节点
+     *  关联的ClusterNode集群节点
      * 一个资源对应一个clusterNode 对应多个DefaultNode  同一个资源的多个DefaultNode对应一个clusterNode
      *
      */

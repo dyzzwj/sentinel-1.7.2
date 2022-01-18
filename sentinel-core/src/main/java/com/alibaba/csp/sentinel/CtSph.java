@@ -133,11 +133,12 @@ public class CtSph implements Sph {
         //获取方法调用的上下文环境，上下环境对象存储在线程本地变量：ThreadLocal 中，上下文环境中存储的是整个调用链
         Context context = ContextUtil.getContext();
         if (context instanceof NullContext) {
+            //当Context数量超过了阈值，不会做任何规则校验
             // The {@link NullContext} indicates that the amount of context has exceeded the threshold,
             // so here init the entry only. No rule checking will be done.
             return new CtEntry(resourceWrapper, null, context);
         }
-        //上下文为空 就使用默认context
+        //上下文为空 就使用默认上下文sentinel_default_context
         if (context == null) {
             // Using default context.
             //使用默认context
@@ -168,7 +169,7 @@ public class CtSph implements Sph {
         if (chain == null) {
             return new CtEntry(resourceWrapper, null, context);
         }
-        //根据插槽链chain生成Entry  同时将当前entry设置为Context的curEntry
+        //根据插槽链chain生成Entry  同时将当前entry设置为Context的curEntry（构造时将这个Entry接入Context中的Entry链表尾部）
         Entry e = new CtEntry(resourceWrapper, chain, context);
         try {
             /**
@@ -224,6 +225,7 @@ public class CtSph implements Sph {
      * @return {@link ProcessorSlotChain} of the resource
      */
     ProcessorSlot<Object> lookProcessChain(ResourceWrapper resourceWrapper) {
+        // 1. 同一个name的资源，会使用同一个ProcessorSlotChain
         //根据入参resourceWrapper ，从本地缓存中先获取一次插槽链chain
         ProcessorSlotChain chain = chainMap.get(resourceWrapper);
         if (chain == null) {

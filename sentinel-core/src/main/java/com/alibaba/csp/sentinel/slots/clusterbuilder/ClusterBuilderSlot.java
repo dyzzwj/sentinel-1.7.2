@@ -78,6 +78,7 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
 
     /**
      * 一个资源对应一个ClusterBuilderSlot 同理对应一个clusterNode
+     *    ClusterBuilderSlot每个资源一个实例，这里保存当前资源对应ClusterNode
      */
     private volatile ClusterNode clusterNode = null;
 
@@ -102,6 +103,7 @@ public class ClusterBuilderSlot extends AbstractLinkedProcessorSlot<DefaultNode>
                 }
             }
         }
+        // 2. 保存ClusterNode到当前上下文正在处理的DefaultNode
         node.setClusterNode(clusterNode);
 
         /**

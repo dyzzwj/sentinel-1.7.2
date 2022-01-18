@@ -20,11 +20,15 @@ package com.alibaba.csp.sentinel;
  * @since 1.7.0
  */
 public final class ResourceTypeConstants {
-
+    // 默认普通资源
     public static final int COMMON = 0;
+    //http
     public static final int COMMON_WEB = 1;
+    //// RPC：Dubbo、Motan、Sofa-RPC
     public static final int COMMON_RPC = 2;
+    // spring-cloud-gateway、zuul
     public static final int COMMON_API_GATEWAY = 3;
+    //sql
     public static final int COMMON_DB_SQL = 4;
 
     private ResourceTypeConstants() {}

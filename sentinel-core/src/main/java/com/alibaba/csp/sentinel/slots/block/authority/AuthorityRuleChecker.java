@@ -36,6 +36,7 @@ final class AuthorityRuleChecker {
         }
 
         // Do exact match with origin name.
+        // 1. 判断规则是否适用于当前上下文中的app
         int pos = rule.getLimitApp().indexOf(requester);
         boolean contain = pos > -1;
 

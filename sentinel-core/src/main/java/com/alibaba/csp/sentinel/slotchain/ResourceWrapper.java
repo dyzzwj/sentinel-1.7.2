@@ -26,10 +26,11 @@ import com.alibaba.csp.sentinel.util.AssertUtil;
  * @author Eric Zhao
  */
 public abstract class ResourceWrapper {
-
+    // 资源名称
     protected final String name;
-
+    // IN or OUT 是入口还是出口流量
     protected final EntryType entryType;
+    // 资源类型  ResourceTypeConstants
     protected final int resourceType;
 
     public ResourceWrapper(String name, EntryType entryType, int resourceType) {

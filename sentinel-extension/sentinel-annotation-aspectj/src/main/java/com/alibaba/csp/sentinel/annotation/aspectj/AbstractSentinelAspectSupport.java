@@ -149,7 +149,9 @@ public abstract class AbstractSentinelAspectSupport {
             Object[] args = Arrays.copyOf(originArgs, originArgs.length + 1);
             args[args.length - 1] = ex;
             try {
+
                 if (isStatic(blockHandlerMethod)) {
+                    //静态方法
                     return blockHandlerMethod.invoke(null, args);
                 }
                 return blockHandlerMethod.invoke(pjp.getTarget(), args);

@@ -35,8 +35,10 @@ import com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot;
  * @see ContextUtil
  * @see ContextUtil#enter(String, String)
  * @see NodeSelectorSlot
- *
+ *     统计维度是Context，表示同一个上下文中，共享同一个EntranceNode实例，在Context创建时创建；
  *    该节点表示一棵调用链树的入口节点，通过他可以获取调用链树中所有的子节点
+ *    EntranceNode继承了DefaultNode，是Node树的树根。
+ *    EntranceNode重写了所有统计方法，比如avgRt统计平均响应时间，根据所有子节点的统计数据，计算得到最终的平均响应时间。
  */
 public class EntranceNode extends DefaultNode {
 

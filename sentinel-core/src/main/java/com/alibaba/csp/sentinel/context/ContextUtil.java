@@ -46,7 +46,7 @@ public class ContextUtil {
 
     /**
      * Store the context in ThreadLocal for easy access.
-     *  使用ThreadLocal存储x线程上下文环境对象Context
+     *  使用ThreadLocal存储线程上下文环境对象Context
      *
      */
     private static ThreadLocal<Context> contextHolder = new ThreadLocal<>();
@@ -65,6 +65,7 @@ public class ContextUtil {
     private static final Context NULL_CONTEXT = new NullContext();
 
     static {
+        //初始化默认的sentinel_default_context
         // Cache the entrance node for default context.
         initDefaultContext();
     }
@@ -133,11 +134,12 @@ public class ContextUtil {
 
     protected static Context trueEnter(String name, String origin) {
 
-        //从threadLocal中获取Context对象 线程首次获取时为空
+        // 1. 获取当前线程上下文，如果存在的话，不会创建新的上下文
         Context context = contextHolder.get();
         if (context == null) {
             Map<String, DefaultNode> localCacheNameMap = contextNameNodeMap;
             /**
+             * // 2. 获取上下文name对应的EntranceNode，如果不存在需要创建
              * 根据Context的名称从缓存中找对应的node 通常是EntranceNode 即用来表示入口的节点Node 为 EntranceNode
              */
             DefaultNode node = localCacheNameMap.get(name);

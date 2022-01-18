@@ -36,6 +36,9 @@ import com.alibaba.csp.sentinel.slots.block.AbstractRule;
  * @author jialiang.linjl
  * @author Carpenter Lee
  * @see SystemRuleManager
+ *
+ *  系统规则
+ *
  */
 public class SystemRule extends AbstractRule {
 

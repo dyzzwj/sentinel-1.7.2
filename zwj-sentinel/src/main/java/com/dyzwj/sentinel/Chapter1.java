@@ -17,16 +17,21 @@ public class Chapter1 {
         //配置规则
         initFlowRules();
         while (true) {
+            int i = 0 ;
             Entry entry = null;
             try {
                 entry = SphU.entry("HelloWorld");
                 /*您的业务逻辑 - 开始*/
-                System.out.println("hello world");
+                i++;
+                System.out.println( i + "hello world");
+                Thread.sleep(30);
                 /*您的业务逻辑 - 结束*/
             } catch (BlockException e1) {
                 /*流控逻辑处理 - 开始*/
                 System.out.println("block!");
                 /*流控逻辑处理 - 结束*/
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             } finally {
                 if (entry != null) {
                     entry.exit();

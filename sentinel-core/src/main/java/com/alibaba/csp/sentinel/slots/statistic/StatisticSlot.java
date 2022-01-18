@@ -69,6 +69,9 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             fireEntry(context, resourceWrapper, node, count, prioritized, args);
 
             /**
+             * 统计数据ThreadNum++ passRequest++
+             *  2-1. DefaultNode Resource+Context维度  ClusterNode Resource 维度
+             *
              * 如果后续处理器成功执行，即能通过SlotChain中后面的Slot的entry方法，说明没有被限流或降级
              * 则将正在执行线程数统计指标加一，并将通过的请求数量指标增加对应的值。
              *
@@ -79,6 +82,7 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             node.addPassRequest(count);
 
             /**
+             *  // 2-2. origin ClusterNode  origin+Resource维度
              * 如果上下文环境中保存的调用源头（调用方）的节点信息不为空 则更新该节点的统计数据 ：线程数与通过数量
              *
              *  ClusterBuilderSlot中设置的OriginNode
@@ -89,6 +93,7 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
                 context.getCurEntry().getOriginNode().addPassRequest(count);
             }
             /**
+             *  // 2-3 全局入口流量统计
              *  如果资源的进入类型为 EntryType.IN，表示入站流量，更新入站全局统计数据(集群范围 ClusterNode)。
              */
             if (resourceWrapper.getEntryType() == EntryType.IN) {
@@ -96,14 +101,14 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
                 Constants.ENTRY_NODE.increaseThreadNum();
                 Constants.ENTRY_NODE.addPassRequest(count);
             }
-
+            // 3. 给用户的扩展点，可以通过SPI加载
             //执行注册的进入Handler，可以通过 StatisticSlotCallbackRegistry 的 addEntryCallback 注册相关监听器。
             // Handle pass event with registered entry callback handlers.
             for (ProcessorSlotEntryCallback<DefaultNode> handler : StatisticSlotCallbackRegistry.getEntryCallbacks()) {
                 handler.onPass(context, resourceWrapper, node, count, args);
             }
         } catch (PriorityWaitException ex) {
-            /**
+            /**    // 这是流控规则才会抛出的异常
              * 如果捕获到 PriorityWaitException ，则认为是等待过一定时间，但最终还是算通过，
              * 只需增加线程的个数，但无需增加节点通过的数量，具体原因我们在详细分析限流部分时会重点讨论，也会再次阐述 PriorityWaitException 的含义
              */
@@ -122,22 +127,28 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
                 handler.onPass(context, resourceWrapper, node, count, args);
             }
         } catch (BlockException e) {
+            // 1. 设置BlockError到上下文中
             // Blocked, set block exception to current entry.
             context.getCurEntry().setError(e);
             /**
+             *  // 2. 统计数据 BlockQps++
+             *  // 2-1. DefaultNode Resource+Context维度  ClusterNode Resource 维度
              * 如果捕获到 BlockException，则主要增加阻塞的数量。
              */
             // Add block count.
             node.increaseBlockQps(count);
+            // 2-2 origin ClusterNode  origin+Resource维度
             if (context.getCurEntry().getOriginNode() != null) {
                 context.getCurEntry().getOriginNode().increaseBlockQps(count);
             }
 
+            // 2-3 全局入口流量统计
             if (resourceWrapper.getEntryType() == EntryType.IN) {
                 // Add count for global inbound entry node for global statistics.
                 Constants.ENTRY_NODE.increaseBlockQps(count);
             }
 
+            // 3. 给用户的扩展点，可以通过SPI加载
             // Handle block event with registered entry callback handlers.
             for (ProcessorSlotEntryCallback<DefaultNode> handler : StatisticSlotCallbackRegistry.getEntryCallbacks()) {
                 handler.onBlocked(e, context, resourceWrapper, node, count, args);

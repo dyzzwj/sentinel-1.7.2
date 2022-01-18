@@ -32,6 +32,8 @@ import com.alibaba.csp.sentinel.slots.block.RuleConstant;
  * @author jialiang.linjl
  * @author Eric Zhao
  * @since 0.2.0
+ *
+ *   热点参数流控规则
  */
 public class ParamFlowRule extends AbstractRule {
 

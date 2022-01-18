@@ -91,13 +91,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class StatisticNode implements Node {
 
-     /**
+     /**  秒级滑动窗口
      * 每秒的实时统计信息 使用ArrayMetric实现 即基于滑动窗口实现 默认1s 采样 2次。即一个统计周期中包含两个滑动窗口。
      */
     private transient volatile Metric rollingCounterInSecond = new ArrayMetric(SampleCountProperty.SAMPLE_COUNT,
         IntervalProperty.INTERVAL);
 
-    /**
+    /** 分钟级滑动窗口
      * 每分钟实时统计信息，同样使用 ArrayMetric 实现，即基于滑动窗口实现。每1分钟，抽样60次，即包含60个滑动窗口，每一个窗口的时间间隔为 1s 。
      */
     private transient Metric rollingCounterInMinute = new ArrayMetric(60, 60 * 1000, false);

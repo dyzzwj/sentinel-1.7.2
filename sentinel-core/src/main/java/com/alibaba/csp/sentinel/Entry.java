@@ -59,13 +59,15 @@ public abstract class Entry implements AutoCloseable {
      */
     private long createTime;
     /**
+     *   当前上下文的统计信息（包含子Node）
      *  当前entry所关联的node，会在NodeSelectorSlot插槽中设置，该资源所对应的实时采集信息
      */
     private Node curNode;
     /**
      * {@link Node} of the specific origin, Usually the origin is the Service Consumer.
-     * context的请求源节点，通常是服务的消费端，如果存在的话，在ClusterBuilderSlot的entry方法中设置
-     * originNode是一个StatisticNode节点，originNode设置的前提是origin不为空
+     *    来源方统计信息
+     *  context的请求源节点，通常是服务的消费端，如果存在的话，在ClusterBuilderSlot的entry方法中设置
+     *  originNode是一个StatisticNode节点，originNode设置的前提是origin不为空
      */
     private Node originNode;
     private Throwable error;

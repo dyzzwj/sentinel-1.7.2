@@ -77,7 +77,7 @@ public class Context {
 
     /**
      * Current processing entry.
-     *  调用链中当前节点的上下文信息
+     *  调用链中当前节点的上下文信息 当前上下文中，用户最后一个获得到的Entry
      *
      */
     private Entry curEntry;

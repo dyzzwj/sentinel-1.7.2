@@ -41,9 +41,10 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @author qinan.qn
  * @author jialiang.linjl
+ *   统计维度是Resource，表示同一个资源共享同一个ClusterNode实例，在ClusterBuilderSlot中创建；
  *
  *  实现基于集群限流模式的节点， 一个资源 ID 只对应一个 ClusterNode 相同的资源会全局共享同一个ClusterNode，不管他属于哪个上下文
- *   保存着某个resource在所有的context中实时指标的总和
+ *   保存着某个resource在所有的context中实时指标的总和 ClusterNode还根据Sph.entry时传入的origin不同（origin存储在上下文中），在originCountMap中保存了Resource下不同origin的统计数据StatisticNode。
  *   该节点中保存了资源的总体的运行时统计信息，包括rt，线程数，qps等等，
  */
 public class ClusterNode extends StatisticNode {
@@ -70,7 +71,7 @@ public class ClusterNode extends StatisticNode {
      * So we didn't use concurrent map here, but a lock, as this lock only happens
      * at the very beginning while concurrent map will hold the lock all the time.
      * </p>
-     *  来源指标数据统计
+     *  来源指标数据统计  origin来源 - 统计数据
      */
     private Map<String, StatisticNode> originCountMap = new HashMap<>();
 
