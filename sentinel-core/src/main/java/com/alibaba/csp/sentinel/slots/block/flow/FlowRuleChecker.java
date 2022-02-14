@@ -121,7 +121,10 @@ public class FlowRuleChecker {
         if (StringUtil.isEmpty(refResource)) {
             return null;
         }
+
+        // 流控模式 = 关联，返回引用资源的ClusterNode（Context维度）
         /**
+         *
          * STRATEGY_RELATE 关联其他的指定资源，如资源A想以资源B的流量状况来决定是否需要限流，这时资源A规则配置可以使用 STRATEGY_RELATE 策略
          * 如果流控模式为 RuleConstant.STRATEGY_RELATE(关联)，则从集群环境中获取对应关联资源所代表的 Node，
          * 通过(ClusterBuilderSlot会收集每一个资源的实时统计信息)
@@ -131,6 +134,11 @@ public class FlowRuleChecker {
             //获取关联资源的集群节点
             return ClusterBuilderSlot.getClusterNode(refResource);
         }
+
+
+        // 流控模式 = 链路，如果引用资源与当前上下文（EntranceNode对应资源名称）一致，返回context.curEntry.curNode，否则返回空
+        // 意思是，当前Rule针对某个上下文链路（EntranceNode对应链路）才生效，返回当前Node节点（Context+Resource维度）
+
         /**
          *  STRATEGY_CHAIN 对指定入口的流量限流，因为流量可以有多个不同的入口（EntranceNode）
          * 如果流控模式为 RuleConstant.STRATEGY_CHAIN(调用链)，则判断当前调用上下文的入口资源与规则配置的是否一样，
@@ -173,27 +181,31 @@ public class FlowRuleChecker {
         //如果限流规则配置的针对的调用方与当前请求实际调用来源匹配（并且不是 default、other)时的处理逻辑
         //filterOrigin():origin既不是default 也不是other
         if (limitApp.equals(origin) && filterOrigin(origin)) {
+            // 1. context.origin = rule.limitApp = xxx（非default和other）
             //如果流控模式为 RuleConstant.STRATEGY_DIRECT(直接)，则从 context 中获取源调用方所代表的 Node
             if (strategy == RuleConstant.STRATEGY_DIRECT) {
-                // Matches limit origin, return origin statistic node.
+                // STRATEGY_DIRECT --- 取context.curEntry.originNode
+
                 //ClusterBuilderSlot会设置context的originNode
                 return context.getOriginNode();
             }
+            // 非STRATEGY_DIRECT，获取引用的Node返回
             //配置的策略为关联或链路
             return selectReferenceNode(rule, context, node);
 
         } else if (RuleConstant.LIMIT_APP_DEFAULT.equals(limitApp)) {
+            // 2. context.origin = rule.limitApp = default（默认）
             //如果流控规则针对的调用方(limitApp) 配置的为 default，表示对所有的调用源都生效，其获取实时统计节点(Node)的处理逻辑为：
             if (strategy == RuleConstant.STRATEGY_DIRECT) {
-                // Return the cluster node.
+                // STRATEGY_DIRECT --- 取Node对应ClusterNode（Resource）维度指标返回
                 //如果流控模式为 RuleConstant.STRATEGY_DIRECT，则直接获取本次调用上下文环境对应的节点的ClusterNode。
                 return node.getClusterNode();
             }
-
+            // 非STRATEGY_DIRECT，获取引用的Node返回
             return selectReferenceNode(rule, context, node);
         } else if (RuleConstant.LIMIT_APP_OTHER.equals(limitApp)
-                //FlowRuleManager.isOtherOrigin(origin, rule.getResource())：返回true表示要进行限流判断
             && FlowRuleManager.isOtherOrigin(origin, rule.getResource())) {
+            // 3. rule.limitApp = other && RuleManager中找不到origin+resource维度的Rule
             /**
              *   流控规则针对调用方如果设置为 other，表示针对 没有配置流控规则的资源。 流控规则是针对FlowRule里 非limitApp的其他所有调用方
              *
@@ -201,10 +213,11 @@ public class FlowRuleChecker {
              * 只要存在，则这条规则对当前资源“失效”，如果针对该资源没有配置其他额外的流控规则，则获取实时统计节点(Node)的处理逻辑为：
              */
             if (strategy == RuleConstant.STRATEGY_DIRECT) {
+                // STRATEGY_DIRECT --- 取context.curEntry.originNode
                 //如果流控模式为 RuleConstant.STRATEGY_DIRECT(直接)，则从 context 中获取源调用方所代表的 Node。
                 return context.getOriginNode();
             }
-
+            // 非STRATEGY_DIRECT，获取引用的Node返回
             return selectReferenceNode(rule, context, node);
         }
         //如果没有选择到合适的 Node，则针对该流控规则，默认放行。

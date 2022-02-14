@@ -43,15 +43,25 @@ import com.alibaba.csp.sentinel.slots.block.AbstractRule;
 public class SystemRule extends AbstractRule {
 
     /**
+     *   // 最大系统负载（不等同于Linux load）
+     *
      * negative value means no threshold checking.
      */
     private double highestSystemLoad = -1;
     /**
+     *
+     *  // 最大cpu使用率
      * cpu usage, between [0, 1]
      */
     private double highestCpuUsage = -1;
+
+    //最大qps
     private double qps = -1;
+
+    //最大平均响应时间 单位ms
     private long avgRt = -1;
+
+    //最大线程并发数
     private long maxThread = -1;
 
     public double getQps() {

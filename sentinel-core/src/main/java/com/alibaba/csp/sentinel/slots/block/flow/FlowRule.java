@@ -54,7 +54,7 @@ public class FlowRule extends AbstractRule {
 
     /**
      * The threshold type of flow control (0: thread count, 1: QPS).
-     *
+     *  阈值类型 0-线程数 1-QPS（默认）
      *  流量控制的阈值类型，目前支持 QPS 与 并发线程数，对应 【新增流控规则界面】的阔值类型。
      *  默认是qps
      */

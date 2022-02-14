@@ -291,15 +291,22 @@ public final class SystemRuleManager {
         if (resourceWrapper == null) {
             return;
         }
+
+
         // Ensure the checking switch is on.
         if (!checkSystemStatus.get()) {
             return;
         }
 
+        // 放行所有EntryType.OUT的出口资源流量；
         // for inbound traffic only
         if (resourceWrapper.getEntryType() != EntryType.IN) {
             return;
         }
+
+        /**
+         * 根据全局ClusterNode统计的入口流量，校验QPS、ThreadNum、RT，这些数据是在StatisticSlot中统计的；
+         */
 
         // total qps
         double currentQps = Constants.ENTRY_NODE == null ? 0.0 : Constants.ENTRY_NODE.successQps();
@@ -318,7 +325,14 @@ public final class SystemRuleManager {
             throw new SystemBlockException(resourceWrapper.getName(), "rt");
         }
 
+
+        //系统负载和CPU使用率校验
         // load. BBR algorithm.
+        /**
+         * 只有当系统负载大于规则阈值，且每秒并发线程数 > 最大qps * 最小rt（秒）时（参考BBR算法），才会抛出SystemBlockException。
+         * 也就是说针对于load的配置，系统负载高不能直接决定是否拒绝请求，还取决于最大qps * 最小rt 和 每秒并发线程数的关系
+         *
+         */
         if (highestSystemLoadIsSet && getCurrentSystemAvgLoad() > highestSystemLoad) {
             if (!checkBbr(currentThread)) {
                 throw new SystemBlockException(resourceWrapper.getName(), "load");
@@ -333,6 +347,7 @@ public final class SystemRuleManager {
 
     private static boolean checkBbr(int currentThread) {
         if (currentThread > 1 &&
+                // 每秒并发线程数 > 最大qps * 最小响应时间（秒）
             currentThread > Constants.ENTRY_NODE.maxSuccessQps() * Constants.ENTRY_NODE.minRt() / 1000) {
             return false;
         }

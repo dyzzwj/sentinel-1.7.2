@@ -26,6 +26,8 @@ import com.alibaba.csp.sentinel.util.StringUtil;
 import com.sun.management.OperatingSystemMXBean;
 
 /**
+ *    每秒统计系统负载和CPU使用率。
+ *
  * @author jialiang.linjl
  */
 public class SystemStatusListener implements Runnable {
@@ -46,10 +48,17 @@ public class SystemStatusListener implements Runnable {
         return currentCpuUsage;
     }
 
+
+    /**
+     * 每秒统计系统负载和CPU使用率。
+     *
+     *  使用JDK的MXBean获取系统负载和CPU使用率。
+     */
     @Override
     public void run() {
         try {
             OperatingSystemMXBean osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+            // 1. 系统负载
             currentLoad = osBean.getSystemLoadAverage();
 
             /*
@@ -60,8 +69,11 @@ public class SystemStatusListener implements Runnable {
              * observed. All values between 0.0 and 1.0 are possible depending of the activities going on in the
              * system. If the system recent cpu usage is not available, the method returns a negative value.
              */
+            // 2. cpu使用率
+            // 2-1. 普通linux环境下cpu使用率
             double systemCpuUsage = osBean.getSystemCpuLoad();
 
+            // 2-2. 运行于容器内的应用cpu使用率
             // calculate process cpu usage to support application running in container environment
             RuntimeMXBean runtimeBean = ManagementFactory.getPlatformMXBean(RuntimeMXBean.class);
             long newProcessCpuTime = osBean.getProcessCpuTime();
@@ -73,9 +85,9 @@ public class SystemStatusListener implements Runnable {
             double processCpuUsage = (double) processCpuTimeDiffInMs / processUpTimeDiffInMs / cpuCores;
             processCpuTime = newProcessCpuTime;
             processUpTime = newProcessUpTime;
-
+            // 2-3. max(2-1,2-2)
             currentCpuUsage = Math.max(processCpuUsage, systemCpuUsage);
-
+            // 3. 如果系统负载大于规则中的阈值，打印日志
             if (currentLoad > SystemRuleManager.getSystemLoadThreshold()) {
                 writeSystemStatusLog();
             }

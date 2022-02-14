@@ -27,6 +27,14 @@ import com.alibaba.csp.sentinel.util.StringUtil;
  */
 final class AuthorityRuleChecker {
 
+
+    /**
+     * 如果授权配置是黑名单，且origin在黑名单内，则拒绝；
+     * 如果授权配置是白名单，且origin不在白名单内，则拒绝；
+     * @param rule
+     * @param context
+     * @return
+     */
     static boolean passCheck(AuthorityRule rule, Context context) {
         String requester = context.getOrigin();
 
@@ -54,10 +62,11 @@ final class AuthorityRuleChecker {
         }
 
         int strategy = rule.getStrategy();
+        // 2. 如果规则配置是黑名单，来源应用在黑名单内，则拒绝
         if (strategy == RuleConstant.AUTHORITY_BLACK && contain) {
             return false;
         }
-
+        // 3. 如果规则配置是白名单，来源应用在白名单外，则拒绝
         if (strategy == RuleConstant.AUTHORITY_WHITE && !contain) {
             return false;
         }
