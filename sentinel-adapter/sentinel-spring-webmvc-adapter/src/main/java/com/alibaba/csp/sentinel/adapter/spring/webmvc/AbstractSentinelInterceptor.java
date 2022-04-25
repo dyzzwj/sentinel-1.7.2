@@ -54,12 +54,16 @@ public abstract class AbstractSentinelInterceptor implements HandlerInterceptor 
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
         throws Exception {
         try {
+            //获取资源名称
             String resourceName = getResourceName(request);
 
             if (StringUtil.isNotEmpty(resourceName)) {
                 // Parse the request origin using registered origin parser.
+                //解析请求来源
                 String origin = parseOrigin(request);
+                //获取上下文名字
                 String contextName = getContextName(request);
+                //进入资源
                 ContextUtil.enter(contextName, origin);
                 Entry entry = SphU.entry(resourceName, ResourceTypeConstants.COMMON_WEB, EntryType.IN);
 

@@ -69,22 +69,20 @@ public class Context {
     private final String name;
 
     /**
-     * The entrance node of current invocation tree.
-     *  EntranceNode
+     * 当前调用链的入口节点
      *   调用链入口的节点信息
      */
     private DefaultNode entranceNode;
 
     /**
-     * Current processing entry.
+     *   当前调用链的当前entry
      *  调用链中当前节点的上下文信息 当前上下文中，用户最后一个获得到的Entry
      *
      */
     private Entry curEntry;
 
     /**
-     * The origin of this context (usually indicate different invokers, e.g. service consumer name or origin IP).
-     * 调用者来源
+     * 当前调用链的调用源
      * 调用来源的名称，即服务消费者的名称或者服务消费者的来源 IP，取决于服务消费者是否使用 Sentinel，
      * 由 Sentinel 适配层传递过来。例如：服务提供者是 Spring MVC 应用，且服务提供者使用 Sentinel 的 Web MVC 适配，
      * 那么 Sentinel 会尝试从请求头获取"S-user"，如果服务消费者有在请求头传递这个参数，那么就能够获取到

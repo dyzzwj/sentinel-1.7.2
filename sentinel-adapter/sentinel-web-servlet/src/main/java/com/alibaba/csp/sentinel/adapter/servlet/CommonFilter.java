@@ -82,6 +82,7 @@ public class CommonFilter implements Filter {
         Entry urlEntry = null;
 
         try {
+            // 根据请求生成的资源
             String target = FilterUtil.filterTarget(sRequest);
             // Clean and unify the URL.
             // For REST APIs, you have to clean the URL (e.g. `/foo/1` and `/foo/2` -> `/foo/:id`), or
@@ -97,18 +98,24 @@ public class CommonFilter implements Filter {
                 // Parse the request origin using registered origin parser.
                 String origin = parseOrigin(sRequest);
                 String contextName = webContextUnify ? WebServletConfig.WEB_SERVLET_CONTEXT_NAME : target;
+
                 ContextUtil.enter(contextName, origin);
 
                 if (httpMethodSpecify) {
                     // Add HTTP method prefix if necessary.
+                    // “申请”该资源
                     String pathWithHttpMethod = sRequest.getMethod().toUpperCase() + COLON + target;
                     urlEntry = SphU.entry(pathWithHttpMethod, ResourceTypeConstants.COMMON_WEB, EntryType.IN);
                 } else {
                     urlEntry = SphU.entry(target, ResourceTypeConstants.COMMON_WEB, EntryType.IN);
                 }
             }
+            // 如果能成功“申请”到资源，则说明未被限流
+            // 则将请求放行
             chain.doFilter(request, response);
         } catch (BlockException e) {
+            // 否则如果捕获了BlockException异常，说明请求被限流了
+            // 则将请求重定向到一个默认的页面
             HttpServletResponse sResponse = (HttpServletResponse) response;
             // Return the block page, or redirect to another URL.
             WebCallbackManager.getUrlBlockHandler().blocked(sRequest, sResponse, e);

@@ -55,12 +55,12 @@ public abstract class Entry implements AutoCloseable {
     private static final Object[] OBJECTS0 = new Object[0];
 
     /**
-     * 资源调用的时间戳
+     * 资源调用的时间戳 主要用来后期计算rt
      */
     private long createTime;
     /**
      *   当前上下文的统计信息（包含子Node）
-     *  当前entry所关联的node，会在NodeSelectorSlot插槽中设置，该资源所对应的实时采集信息
+     *  当前Entry所关联的node，该node主要是记录了当前context下该资源的统计信息，会在NodeSelectorSlot插槽中设置，该资源所对应的实时采集信息
      */
     private Node curNode;
     /**

@@ -118,7 +118,7 @@ import java.util.Map;
  * {@code curl http://localhost:8719/tree?type=root}
  * </p>
  *
- *   构建资源（Resource）的路径（DefaultNode），用树的结构存储
+ *   负责收集资源的路径，并将这些资源的调用路径，以树状结构存储起来，用于根据调用路径来限流降级
  *
  *  为当前资源创建 DefaultNode，并且将 DefaultNode 赋值给 Context.curEntry.curNode；
  *  如果当前调用链路上只出现过一次 SphU#entry（或多次Sphu#entry同一资源） 的情况，
@@ -180,7 +180,8 @@ public class NodeSelectorSlot extends AbstractLinkedProcessorSlot<Object> {
          * 如果资源第一次被访问，也就是资源的 ProcessorSlotChain 第一次被创建，那么这个 map 是空的，就会加锁为资源创建 DefaultNode，
          * 如果资源不是首次被访问，但却首次作为当前调用链路（Context）的入口资源，也需要加锁为资源创建一个 DefaultNode。
          * 可见，Sentinel 会为同一资源 ID 创建多少个 DefaultNode 取决于有多少个调用链使用其作为入口资源，
-         * 直白点就是同一资源存在多少个 DefaultNode 取决于 Context.name 有多少种不同取值，这就是为什么说一个资源可能有多个 DefaultNode 的原因。
+         * 在不同的context中对同一个资源可以使用不同的DefaultNode进行分别统计和计算
+         * 同一个context中对同一个resource进行多次entry()调用时，会形式一颗调用树，这个树是通过CtEntry之间的parent/child关系维护的。
          */
 
         /**
