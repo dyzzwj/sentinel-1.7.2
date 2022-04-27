@@ -142,7 +142,7 @@ public class FlowRuleChecker {
         /**
          *  STRATEGY_CHAIN 对指定入口的流量限流，因为流量可以有多个不同的入口（EntranceNode）
          * 如果流控模式为 RuleConstant.STRATEGY_CHAIN(调用链)，则判断当前调用上下文的入口资源与规则配置的是否一样，
-         * 如果是，则返回入口资源对应的 Node，否则返回 null，注意：返回空则该条流控规则直接通过。【
+         * 如果是，则返回入口资源对应的 Node，否则返回 null，注意：返回空则该条流控规则直接通过。
          */
         if (strategy == RuleConstant.STRATEGY_CHAIN) {
             if (!refResource.equals(context.getName())) {
